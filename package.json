@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "format": "prettier --write 'components/**/*' 'pages/**/*'",
     "start": "next start"
   },
   "dependencies": {
@@ -13,5 +14,8 @@
     "query-string": "^6.8.3",
     "react": "16.10.2",
     "react-dom": "16.10.2"
+  },
+  "devDependencies": {
+    "prettier": "^1.18.2"
   }
 }
