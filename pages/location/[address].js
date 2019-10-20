@@ -153,7 +153,7 @@ function PrecipitationSection(props) {
 function formatTempChange(diff) {
   const num = (Number(diff) * 9) / 5;
   const marker = Math.abs(num) < 0.1 ? '' : num > 0 ? '▲' : '▼';
-  return `${marker} ${((num * 9) / 5).toFixed(1)}° F`;
+  return `${marker} ${num.toFixed(1)}° F`;
 }
 
 function formatNumberChange(diff, unit) {
