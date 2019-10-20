@@ -8,6 +8,12 @@ import queryString from 'query-string';
 
 const DEFAULT_YEAR = 2080;
 
+const SCENARIOS = {
+  RCP_26: 'Best case',
+  RCP_45: 'Moderate case',
+  RCP_85: 'Worst case',
+};
+
 function Methodology(props) {
   return (
     <div className={props.className}>
@@ -16,7 +22,8 @@ function Methodology(props) {
           <strong>Methodology</strong>
         </div>
         <div>
-          "Best case" uses RCP 2.6, "Middle case" uses RCP 4.5, and "Worst case" uses RCP 8.5.
+          "{SCENARIOS.RCP_26}" uses RCP 2.6, "{SCENARIOS.RCP_45}" uses RCP 4.5, and "
+          {SCENARIOS.RCP_85}" uses RCP 8.5.
         </div>
         <div>
           <a
@@ -57,18 +64,18 @@ function PrecipitationSection(props) {
       <div className="mt-4">
         <div className="row">
           <div className="col-4">
-            <DataNumber label="Best case" value="--" />
+            <DataNumber label={SCENARIOS.RCP_26} value="--" />
           </div>
           <div className="col-4">
             <DataNumber
-              label="Middle case"
+              label={SCENARIOS.RCP_45}
               value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
               description={`Relative to 2019 projection of ${rcp45_weighted_mean_2019} days`}
             />
           </div>
           <div className="col-4">
             <DataNumber
-              label="Worst case"
+              label={SCENARIOS.RCP_85}
               value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
               description={`Relative to 2019 projection of ${rcp85_weighted_mean_2019} days`}
             />
@@ -135,13 +142,13 @@ function DataHeader(props) {
   return (
     <div className="row">
       <div className="col-4">
-        <DataNumber label="Best case" />
+        <DataNumber label={SCENARIOS.RCP_26} />
       </div>
       <div className="col-4">
-        <DataNumber label="Middle case" />
+        <DataNumber label={SCENARIOS.RCP_45} />
       </div>
       <div className="col-4">
-        <DataNumber label="Worst case" />
+        <DataNumber label={SCENARIOS.RCP_85} />
       </div>
     </div>
   );
