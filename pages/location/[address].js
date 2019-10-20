@@ -178,6 +178,10 @@ function TemperatureSection(props) {
   if (!temperature_increase && !num_days_above_100f) {
     return null;
   }
+  // TODO: methodology
+  const showAdvice =
+    num_days_above_100f &&
+    num_days_above_100f.rcp85_weighted_mean - num_days_above_100f.rcp85_weighted_mean_2019 > 10;
   return (
     <div>
       <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
@@ -190,6 +194,17 @@ function TemperatureSection(props) {
           <NumDaysAbove100F result={num_days_above_100f} />
         </div>
       </div>
+      {showAdvice && (
+        <div className="mt-5">
+          <div className="small text-secondary font-weight-bold">How can I prepare?</div>
+          <div className="mt-2" style={{ fontSize: '1.3em', fontWeight: 600 }}>
+            <div>Insulate windows.</div>
+            <div>Install temporary window reflectors.</div>
+            <div>Install cool or green roofs.</div>
+            <div>Support planting trees to provide shade and cooler air.</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -258,12 +273,12 @@ export default function Location({ geo, results, query }) {
       <div className="container-fluid">
         <div className="row">
           <div
-            className="col-4"
-            style={{ position: 'sticky', background: 'rgb(234, 234, 234)', height: '100vh' }}
+            className="col-4 col-lg-3"
+            style={{ position: 'sticky', background: 'rgb(234, 234, 234)', minHeight: '100vh' }}
           >
             <Sidebar geo={geo} query={query} />
           </div>
-          <div className="col-8">
+          <div className="col-8 col-lg-9">
             <div className="px-4 py-4">
               <TemperatureSection results={results} />
               <PrecipitationSection className="mt-5" results={results} />
