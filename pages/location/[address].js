@@ -13,7 +13,8 @@ function PrecipitationSection(props) {
   if (!num_dry_days) {
     return null;
   }
-  const { rcp45_max, rcp85_max } = num_dry_days;
+  const { rcp45_max, rcp45_max_2019, rcp85_max, rcp85_max_2019 } = num_dry_days;
+  const unit = 'dry days';
   return (
     <div className={props.className}>
       <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
@@ -25,10 +26,16 @@ function PrecipitationSection(props) {
             <DataNumber label="Best case" value="--" />
           </div>
           <div className="col-4">
-            <DataNumber label="Middle case" value={`${Math.round(Number(rcp45_max))} dry days`} />
+            <DataNumber
+              label="Middle case"
+              value={formatNumberChange(rcp45_max - rcp45_max_2019, unit)}
+            />
           </div>
           <div className="col-4">
-            <DataNumber label="Worst case" value={`${Math.round(Number(rcp85_max))} dry days`} />
+            <DataNumber
+              label="Worst case"
+              value={formatNumberChange(rcp85_max - rcp85_max_2019, unit)}
+            />
           </div>
         </div>
       </div>
@@ -41,9 +48,9 @@ function formatTempChange(diff) {
   return `${num > 0 ? '▲' : '▼'} ${((num * 9) / 5).toFixed(1)}° F`;
 }
 
-function formatIntChange(diff, unit) {
+function formatNumberChange(diff, unit) {
   const num = Number(diff);
-  return `${num > 0 ? '▲' : '▼'} ${Math.round(num)} ${unit}`;
+  return `${num > 0 ? '▲' : '▼'} ${num.toFixed(1)} ${unit}`;
 }
 
 function DataNumber({ label, value, description }) {
@@ -60,17 +67,18 @@ function NumDaysAbove100F(props) {
   if (!props.result) {
     return null;
   }
-  const { rcp45_max, rcp85_max } = props.result;
+  const { rcp45_max, rcp45_max_2019, rcp85_max, rcp85_max_2019 } = props.result;
+  const unit = 'days >100°F';
   return (
     <div className="row">
       <div className="col-4">
         <DataNumber value="--" />
       </div>
       <div className="col-4">
-        <DataNumber value={formatIntChange(rcp45_max, 'days > 100° F')} />
+        <DataNumber value={formatNumberChange(rcp45_max - rcp45_max_2019, unit)} />
       </div>
       <div className="col-4">
-        <DataNumber value={formatIntChange(rcp85_max, 'days > 100° F')} />
+        <DataNumber value={formatNumberChange(rcp85_max - rcp85_max_2019, unit)} />
       </div>
     </div>
   );
