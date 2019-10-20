@@ -9,8 +9,8 @@ import queryString from 'query-string';
 const DEFAULT_YEAR = 2080;
 
 const SCENARIOS = {
-  RCP_26: 'Best case',
-  RCP_45: 'Moderate case',
+  RCP_26: 'Optimistic case',
+  RCP_45: 'Status quo',
   RCP_85: 'Worst case',
 };
 
