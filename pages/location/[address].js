@@ -9,7 +9,31 @@ import queryString from 'query-string';
 const DEFAULT_YEAR = 2080;
 
 function PrecipitationSection(props) {
-  return <pre>{JSON.stringify(props.results.num_dry_days, null, 4)}</pre>;
+  const { num_dry_days } = props.results;
+  if (!num_dry_days) {
+    return null;
+  }
+  const { rcp45_max, rcp85_max } = num_dry_days;
+  return (
+    <div className={props.className}>
+      <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
+        🌧️ Precipitation
+      </h3>
+      <div className="mt-4">
+        <div className="row">
+          <div className="col-4">
+            <DataNumber label="Best case" value="--" />
+          </div>
+          <div className="col-4">
+            <DataNumber label="Middle case" value={`${Math.round(Number(rcp45_max))} dry days`} />
+          </div>
+          <div className="col-4">
+            <DataNumber label="Worst case" value={`${Math.round(Number(rcp85_max))} dry days`} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function formatTempChange(diff) {
@@ -19,7 +43,7 @@ function formatTempChange(diff) {
 
 function formatIntChange(diff, unit) {
   const num = Number(diff);
-  return `${num > 0 ? '▲' : '▼'} ${Math.round((num * 9) / 5)} ${unit}`;
+  return `${num > 0 ? '▲' : '▼'} ${Math.round(num)} ${unit}`;
 }
 
 function DataNumber({ label, value, description }) {
@@ -39,12 +63,30 @@ function NumDaysAbove100F(props) {
   const { rcp45_max, rcp85_max } = props.result;
   return (
     <div className="row">
-      <div className="col-4">&nbsp;</div>
+      <div className="col-4">
+        <DataNumber value="--" />
+      </div>
       <div className="col-4">
         <DataNumber value={formatIntChange(rcp45_max, 'days > 100° F')} />
       </div>
       <div className="col-4">
         <DataNumber value={formatIntChange(rcp85_max, 'days > 100° F')} />
+      </div>
+    </div>
+  );
+}
+
+function DataHeader(props) {
+  return (
+    <div className="row">
+      <div className="col-4">
+        <DataNumber label="Best case" />
+      </div>
+      <div className="col-4">
+        <DataNumber label="Middle case" />
+      </div>
+      <div className="col-4">
+        <DataNumber label="Worst case" />
       </div>
     </div>
   );
@@ -64,13 +106,13 @@ function Temperature(props) {
   return (
     <div className="row">
       <div className="col-4">
-        <DataNumber label="Best case" value={formatTempChange(model_26_warming)} />
+        <DataNumber value={formatTempChange(model_26_warming)} />
       </div>
       <div className="col-4">
-        <DataNumber label="Middle case" value={formatTempChange(model_45_warming)} />
+        <DataNumber value={formatTempChange(model_45_warming)} />
       </div>
       <div className="col-4">
-        <DataNumber label="Worst case" value={formatTempChange(model_85_warming)} />
+        <DataNumber value={formatTempChange(model_85_warming)} />
       </div>
     </div>
   );
@@ -83,14 +125,15 @@ function TemperatureSection(props) {
   }
   return (
     <div>
-      <h3 className="font-weight-bold" style={{ fontSize: '2.5em' }}>
+      <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
         🔥 Temperature
       </h3>
       <div className="mt-4">
+        <DataHeader />
         <Temperature result={temperature_increase} />
-      </div>
-      <div className="mt-2">
-        <NumDaysAbove100F result={num_days_above_100f} />
+        <div className="mt-2">
+          <NumDaysAbove100F result={num_days_above_100f} />
+        </div>
       </div>
     </div>
   );
@@ -157,7 +200,7 @@ export default function Location({ geo, results, query }) {
           <div className="col-8">
             <div className="px-4 py-4">
               <TemperatureSection results={results} />
-              <PrecipitationSection results={results} />
+              <PrecipitationSection className="mt-5" results={results} />
             </div>
           </div>
         </div>
