@@ -42,7 +42,12 @@ function PrecipitationSection(props) {
   if (!num_dry_days) {
     return null;
   }
-  const { rcp45_max, rcp45_max_2019, rcp85_max, rcp85_max_2019 } = num_dry_days;
+  const {
+    rcp45_weighted_mean,
+    rcp45_weighted_mean_2019,
+    rcp85_weighted_mean,
+    rcp85_weighted_mean_2019,
+  } = num_dry_days;
   const unit = 'dry days';
   return (
     <div className={props.className}>
@@ -57,13 +62,13 @@ function PrecipitationSection(props) {
           <div className="col-4">
             <DataNumber
               label="Middle case"
-              value={formatNumberChange(rcp45_max - rcp45_max_2019, unit)}
+              value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
             />
           </div>
           <div className="col-4">
             <DataNumber
               label="Worst case"
-              value={formatNumberChange(rcp85_max - rcp85_max_2019, unit)}
+              value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
             />
           </div>
         </div>
@@ -96,7 +101,12 @@ function NumDaysAbove100F(props) {
   if (!props.result) {
     return null;
   }
-  const { rcp45_max, rcp45_max_2019, rcp85_max, rcp85_max_2019 } = props.result;
+  const {
+    rcp45_weighted_mean,
+    rcp45_weighted_mean_2019,
+    rcp85_weighted_mean,
+    rcp85_weighted_mean_2019,
+  } = props.result;
   const unit = 'days >100°F';
   return (
     <div className="row">
@@ -104,10 +114,14 @@ function NumDaysAbove100F(props) {
         <DataNumber value="--" />
       </div>
       <div className="col-4">
-        <DataNumber value={formatNumberChange(rcp45_max - rcp45_max_2019, unit)} />
+        <DataNumber
+          value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
+        />
       </div>
       <div className="col-4">
-        <DataNumber value={formatNumberChange(rcp85_max - rcp85_max_2019, unit)} />
+        <DataNumber
+          value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
+        />
       </div>
     </div>
   );
