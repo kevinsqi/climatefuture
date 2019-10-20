@@ -152,13 +152,15 @@ function PrecipitationSection(props) {
 }
 
 function formatTempChange(diff) {
-  const num = Number(diff);
-  return `${num > 0 ? '▲' : '▼'} ${((num * 9) / 5).toFixed(1)}° F`;
+  const num = (Number(diff) * 9) / 5;
+  const marker = Math.abs(num) < 0.1 ? '' : num > 0 ? '▲' : '▼';
+  return `${marker} ${((num * 9) / 5).toFixed(1)}° F`;
 }
 
 function formatNumberChange(diff, unit) {
   const num = Number(diff);
-  return `${num > 0 ? '▲' : '▼'} ${num.toFixed(1)} ${unit}`;
+  const marker = Math.abs(num) < 0.1 ? '' : num > 0 ? '▲' : '▼';
+  return `${marker} ${num.toFixed(1)} ${unit}`;
 }
 
 function DataNumber({ label, value, description }) {
