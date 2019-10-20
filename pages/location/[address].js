@@ -177,7 +177,7 @@ function TemperatureSection(props) {
 }
 
 export default function Location({ geo, results, query }) {
-  const [address, setAddress] = React.useState('');
+  const [address, setAddress] = React.useState(query.address);
 
   function onSubmit(event) {
     event.preventDefault();
@@ -210,7 +210,7 @@ export default function Location({ geo, results, query }) {
                 >
                   Local Climate Projections
                 </div>
-                <form className="mt-1" onSubmit={onSubmit}>
+                <form className="mt-2" onSubmit={onSubmit}>
                   <input
                     className="form-control"
                     type="text"
