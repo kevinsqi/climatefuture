@@ -23,7 +23,7 @@ export default function Location(props) {
         <div>Year: {YEAR}</div>
 
         {props.results.map((result) => {
-          return <div>{JSON.stringify(result)}</div>;
+          return <pre>{JSON.stringify(result, null, 4)}</pre>;
         })}
       </div>
     </div>
