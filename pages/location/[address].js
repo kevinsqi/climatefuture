@@ -59,13 +59,22 @@ function FloodingSection(props) {
       <div className="mt-4">
         <div className="row">
           <div className="col-4">
-            <DataNumber label={SCENARIOS.RCP_26} value={`${Math.round(rcp26 * 100)}% chance`} />
+            <DataNumber
+              label={SCENARIOS.RCP_26}
+              value={`${Math.round(rcp26 * 100)}% chance > 5ft`}
+            />
           </div>
           <div className="col-4">
-            <DataNumber label={SCENARIOS.RCP_45} value={`${Math.round(rcp45 * 100)}% chance`} />
+            <DataNumber
+              label={SCENARIOS.RCP_45}
+              value={`${Math.round(rcp45 * 100)}% chance > 5ft`}
+            />
           </div>
           <div className="col-4">
-            <DataNumber label={SCENARIOS.RCP_85} value={`${Math.round(rcp85 * 100)}% chance`} />
+            <DataNumber
+              label={SCENARIOS.RCP_85}
+              value={`${Math.round(rcp85 * 100)}% chance > 5ft`}
+            />
           </div>
         </div>
       </div>
