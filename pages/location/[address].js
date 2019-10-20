@@ -190,7 +190,7 @@ function TemperatureSection(props) {
   );
 }
 
-export default function Location({ geo, results, query }) {
+function Sidebar({ geo, query }) {
   const [address, setAddress] = React.useState(query.address);
 
   function onSubmit(event) {
@@ -199,6 +199,47 @@ export default function Location({ geo, results, query }) {
     window.location = `/location/${address.replace(' ', '-')}`;
   }
 
+  return (
+    <div className="d-flex flex-column px-3 py-4" style={{ height: '100%' }}>
+      <div style={{ flex: 1 }}>
+        <div className="text-secondary" style={{ textTransform: 'uppercase', fontSize: 13 }}>
+          Local Climate Projections
+        </div>
+        <form className="mt-2" onSubmit={onSubmit}>
+          <input
+            className="form-control"
+            type="text"
+            value={address}
+            placeholder="City, address, or zip"
+            onChange={(event) => setAddress(event.target.value)}
+          />
+        </form>
+        <h2 className="mt-3 font-weight-bold" style={{ fontSize: '1.6em' }}>
+          {geo.formatted_address}
+        </h2>
+        <hr />
+        <div className="text-secondary" style={{ textTransform: 'uppercase', fontSize: 13 }}>
+          Projections for
+        </div>
+        <div className="mt-1">
+          {[2040, 2060, 2080, 2099].map((year) => {
+            return (
+              <a
+                className={Number(query.year) === year ? 'font-weight-bold' : ''}
+                style={{ color: '#444', fontSize: '1.2em' }}
+                href={`/location/${query.address}?year=${year}`}
+              >
+                <div>{year}</div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Location({ geo, results, query }) {
   return (
     <div>
       <Head>
@@ -216,40 +257,7 @@ export default function Location({ geo, results, query }) {
             className="col-4"
             style={{ position: 'sticky', background: 'rgb(234, 234, 234)', height: '100vh' }}
           >
-            <div className="d-flex flex-column px-3 py-4" style={{ height: '100%' }}>
-              <div style={{ flex: 1 }}>
-                <div
-                  className="text-secondary"
-                  style={{ textTransform: 'uppercase', fontSize: 13 }}
-                >
-                  Local Climate Projections
-                </div>
-                <form className="mt-2" onSubmit={onSubmit}>
-                  <input
-                    className="form-control"
-                    type="text"
-                    value={address}
-                    placeholder="City, address, or zip"
-                    onChange={(event) => setAddress(event.target.value)}
-                  />
-                </form>
-                <h2 className="mt-3 font-weight-bold" style={{ fontSize: '1.6em' }}>
-                  {geo.formatted_address}
-                </h2>
-                <hr />
-                {[2040, 2060, 2080, 2100].map((year) => {
-                  return (
-                    <a
-                      className={Number(query.year) === year ? 'font-weight-bold' : ''}
-                      style={{ color: '#444', fontSize: '1.2em' }}
-                      href={`/location/${query.address}?year=${year}`}
-                    >
-                      <div>{year}</div>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
+            <Sidebar geo={geo} query={query} />
           </div>
           <div className="col-8">
             <div className="px-4 py-4">
