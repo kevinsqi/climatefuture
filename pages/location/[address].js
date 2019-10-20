@@ -8,41 +8,89 @@ import queryString from 'query-string';
 
 const DEFAULT_YEAR = 2080;
 
-function celsiusToFahrenheitDiff(diff) {
+function PrecipitationSection(props) {
+  return <pre>{JSON.stringify(props.results.num_dry_days, null, 4)}</pre>;
+}
+
+function formatTempChange(diff) {
   const num = Number(diff);
   return `${num > 0 ? '▲' : '▼'} ${((num * 9) / 5).toFixed(1)}° F`;
 }
 
-function DataNumber({ label, value }) {
+function formatIntChange(diff, unit) {
+  const num = Number(diff);
+  return `${num > 0 ? '▲' : '▼'} ${Math.round((num * 9) / 5)} ${unit}`;
+}
+
+function DataNumber({ label, value, description }) {
   return (
     <div>
       <div className="small font-weight-bold text-secondary">{label}</div>
       <div style={{ fontSize: 25 }}>{value}</div>
+      <div className="text-secondary">{description}</div>
+    </div>
+  );
+}
+
+function NumDaysAbove100F(props) {
+  if (!props.result) {
+    return null;
+  }
+  const { rcp45_max, rcp85_max } = props.result;
+  return (
+    <div className="row">
+      <div className="col-4">&nbsp;</div>
+      <div className="col-4">
+        <DataNumber value={formatIntChange(rcp45_max, 'days > 100° F')} />
+      </div>
+      <div className="col-4">
+        <DataNumber value={formatIntChange(rcp85_max, 'days > 100° F')} />
+      </div>
     </div>
   );
 }
 
 function Temperature(props) {
-  const { year_start, year_end, model_26_warming, model_85_warming } = props.result;
+  if (!props.result) {
+    return null;
+  }
+  const {
+    year_start,
+    year_end,
+    model_26_warming,
+    model_45_warming,
+    model_85_warming,
+  } = props.result;
+  return (
+    <div className="row">
+      <div className="col-4">
+        <DataNumber label="Best case" value={formatTempChange(model_26_warming)} />
+      </div>
+      <div className="col-4">
+        <DataNumber label="Middle case" value={formatTempChange(model_45_warming)} />
+      </div>
+      <div className="col-4">
+        <DataNumber label="Worst case" value={formatTempChange(model_85_warming)} />
+      </div>
+    </div>
+  );
+}
+
+function TemperatureSection(props) {
+  const { temperature_increase, num_days_above_100f } = props.results;
+  if (!temperature_increase && !num_days_above_100f) {
+    return null;
+  }
   return (
     <div>
       <h3 className="font-weight-bold" style={{ fontSize: '2.5em' }}>
-        Temperature
+        🔥 Temperature
       </h3>
-      <div className="row">
-        <div className="col-6">
-          <DataNumber
-            label="Best case (RCP 2.6)"
-            value={celsiusToFahrenheitDiff(model_26_warming)}
-          />
-        </div>
-        <div className="col-6">
-          <DataNumber
-            label="Best case (RCP 2.6)"
-            label="Worst case (RCP 8.5)"
-            value={celsiusToFahrenheitDiff(model_85_warming)}
-          />
-        </div>
+      <div className="mt-4">
+        <Temperature result={temperature_increase} />
+      </div>
+      <div className="mt-2">
+        <NumDaysAbove100F result={num_days_above_100f} />
       </div>
     </div>
   );
@@ -50,7 +98,6 @@ function Temperature(props) {
 
 export default function Location({ geo, results, query }) {
   const [address, setAddress] = React.useState('');
-  console.log(geo, results, query);
 
   function onSubmit(event) {
     event.preventDefault();
@@ -107,14 +154,10 @@ export default function Location({ geo, results, query }) {
               </div>
             </div>
           </div>
-          <div className="col-6">
+          <div className="col-8">
             <div className="px-4 py-4">
-              {results.map((result) => {
-                if (result.attribute === 'temperature_increase') {
-                  return <Temperature result={result} />;
-                }
-                return <pre>{JSON.stringify(result, null, 4)}</pre>;
-              })}
+              <TemperatureSection results={results} />
+              <PrecipitationSection results={results} />
             </div>
           </div>
         </div>
@@ -136,6 +179,9 @@ Location.getInitialProps = async function(context) {
   return {
     query: query,
     geo: data.geo,
-    results: data.results,
+    results: data.results.reduce((obj, result) => {
+      obj[result.attribute] = result;
+      return obj;
+    }, {}),
   };
 };
