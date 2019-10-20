@@ -114,12 +114,7 @@ function PrecipitationSection(props) {
   if (!num_dry_days) {
     return null;
   }
-  const {
-    rcp45_weighted_mean,
-    rcp45_weighted_mean_2019,
-    rcp85_weighted_mean,
-    rcp85_weighted_mean_2019,
-  } = num_dry_days;
+  const { rcp45_weighted_mean, rcp85_weighted_mean, historical_average } = num_dry_days;
   const unit = 'dry days';
   return (
     <div className={props.className}>
@@ -134,15 +129,19 @@ function PrecipitationSection(props) {
           <div className="col-4">
             <DataNumber
               label={SCENARIOS.RCP_45}
-              value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
-              description={`Relative to 2019 projection of ${rcp45_weighted_mean_2019} days`}
+              value={formatNumberChange(rcp45_weighted_mean - historical_average, unit)}
+              description={`Relative to historical average of ${historical_average.toFixed(
+                1,
+              )} days`}
             />
           </div>
           <div className="col-4">
             <DataNumber
               label={SCENARIOS.RCP_85}
-              value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
-              description={`Relative to 2019 projection of ${rcp85_weighted_mean_2019} days`}
+              value={formatNumberChange(rcp85_weighted_mean - historical_average, unit)}
+              description={`Relative to historical average of ${historical_average.toFixed(
+                1,
+              )} days`}
             />
           </div>
         </div>
@@ -177,12 +176,7 @@ function NumDaysAbove100F(props) {
   if (!props.result) {
     return null;
   }
-  const {
-    rcp45_weighted_mean,
-    rcp45_weighted_mean_2019,
-    rcp85_weighted_mean,
-    rcp85_weighted_mean_2019,
-  } = props.result;
+  const { rcp45_weighted_mean, rcp85_weighted_mean, historical_average } = props.result;
   const unit = 'days >100°F';
   return (
     <div className="row">
@@ -191,14 +185,14 @@ function NumDaysAbove100F(props) {
       </div>
       <div className="col-4">
         <DataNumber
-          value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
-          description={`Relative to 2019 projection of ${rcp45_weighted_mean_2019} days`}
+          value={formatNumberChange(rcp45_weighted_mean - historical_average, unit)}
+          description={`Relative to historical average of ${historical_average.toFixed(1)} days`}
         />
       </div>
       <div className="col-4">
         <DataNumber
-          value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
-          description={`Relative to 2019 projection of ${rcp85_weighted_mean_2019} days`}
+          value={formatNumberChange(rcp85_weighted_mean - historical_average, unit)}
+          description={`Relative to historical average of ${historical_average.toFixed(1)} days`}
         />
       </div>
     </div>
@@ -255,7 +249,7 @@ function TemperatureSection(props) {
   // TODO: methodology
   const showAdvice =
     num_days_above_100f &&
-    num_days_above_100f.rcp85_weighted_mean - num_days_above_100f.rcp85_weighted_mean_2019 > 10;
+    num_days_above_100f.rcp85_weighted_mean - num_days_above_100f.historical_average > 10;
   return (
     <div>
       <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
