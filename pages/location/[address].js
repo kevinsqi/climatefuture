@@ -281,9 +281,13 @@ export default function Location({ geo, results, query }) {
           <div className="col-8 col-lg-9">
             <div className="px-4 py-4">
               <TemperatureSection results={results} />
-              <PrecipitationSection className="mt-5" results={results} />
-              <hr className="mt-5" />
-              <Methodology className="mt-5" />
+              <div style={{ marginTop: 60 }}>
+                <PrecipitationSection results={results} />
+              </div>
+              <div style={{ marginTop: 60 }}>
+                <hr />
+              </div>
+              <Methodology className="mt-4" />
             </div>
           </div>
         </div>
