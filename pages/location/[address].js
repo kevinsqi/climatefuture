@@ -26,7 +26,9 @@ function Temperature(props) {
   const { year_start, year_end, model_26_warming, model_85_warming } = props.result;
   return (
     <div>
-      <h3>Temperature</h3>
+      <h3 className="font-weight-bold" style={{ fontSize: '2.5em' }}>
+        Temperature
+      </h3>
       <div className="row">
         <div className="col-6">
           <DataNumber
@@ -105,7 +107,7 @@ export default function Location({ geo, results, query }) {
               </div>
             </div>
           </div>
-          <div className="col-8">
+          <div className="col-6">
             <div className="px-4 py-4">
               {results.map((result) => {
                 if (result.attribute === 'temperature_increase') {
