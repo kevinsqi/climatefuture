@@ -44,6 +44,34 @@ function Methodology(props) {
   );
 }
 
+function FloodingSection(props) {
+  const { coastal_flooding_single_year_5ft } = props.results;
+  if (!coastal_flooding_single_year_5ft) {
+    return null;
+  }
+  const { rcp26, rcp45, rcp85 } = coastal_flooding_single_year_5ft;
+  return (
+    <div className={props.className}>
+      <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
+        🌊 Coastal flooding
+      </h3>
+      <div className="mt-4">
+        <div className="row">
+          <div className="col-4">
+            <DataNumber label={SCENARIOS.RCP_26} value={`${Math.round(rcp26 * 100)}% chance`} />
+          </div>
+          <div className="col-4">
+            <DataNumber label={SCENARIOS.RCP_45} value={`${Math.round(rcp45 * 100)}% chance`} />
+          </div>
+          <div className="col-4">
+            <DataNumber label={SCENARIOS.RCP_85} value={`${Math.round(rcp85 * 100)}% chance`} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrecipitationSection(props) {
   const { num_dry_days } = props.results;
   if (!num_dry_days) {
@@ -288,6 +316,9 @@ export default function Location({ geo, results, query }) {
           <div className="col-8 col-lg-9">
             <div className="px-4 py-4">
               <TemperatureSection results={results} />
+              <div style={{ marginTop: 60 }}>
+                <FloodingSection results={results} />
+              </div>
               <div style={{ marginTop: 60 }}>
                 <PrecipitationSection results={results} />
               </div>
