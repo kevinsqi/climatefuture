@@ -8,6 +8,35 @@ import queryString from 'query-string';
 
 const DEFAULT_YEAR = 2080;
 
+function Methodology(props) {
+  return (
+    <div className={props.className}>
+      <div className="small text-secondary">
+        <div>
+          <strong>Methodology</strong>
+        </div>
+        <div>
+          "Best case" uses RCP 2.6, "Middle case" uses RCP 4.5, and "Worst case" uses RCP 8.5.
+        </div>
+        <div>
+          <a
+            className="text-secondary"
+            href="https://github.com/kevinsqi/climate-change-projections-server"
+          >
+            View source code.
+          </a>{' '}
+          <a
+            className="text-secondary"
+            href="https://github.com/kevinsqi/climate-change-projections-server/tree/master/data"
+          >
+            View data sources.
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrecipitationSection(props) {
   const { num_dry_days } = props.results;
   if (!num_dry_days) {
@@ -173,24 +202,27 @@ export default function Location({ geo, results, query }) {
             className="col-4"
             style={{ position: 'sticky', background: 'rgb(234, 234, 234)', height: '100vh' }}
           >
-            <div className="px-3 py-4">
-              <div className="text-secondary" style={{ textTransform: 'uppercase', fontSize: 13 }}>
-                Local Climate Projections
-              </div>
-              <form className="mt-1" onSubmit={onSubmit}>
-                <input
-                  className="form-control"
-                  type="text"
-                  value={address}
-                  placeholder="City, address, or zip"
-                  onChange={(event) => setAddress(event.target.value)}
-                />
-              </form>
-              <h2 className="mt-3 font-weight-bold" style={{ fontSize: '1.6em' }}>
-                {geo.formatted_address}
-              </h2>
-              <hr />
-              <div>
+            <div className="d-flex flex-column px-3 py-4" style={{ height: '100%' }}>
+              <div style={{ flex: 1 }}>
+                <div
+                  className="text-secondary"
+                  style={{ textTransform: 'uppercase', fontSize: 13 }}
+                >
+                  Local Climate Projections
+                </div>
+                <form className="mt-1" onSubmit={onSubmit}>
+                  <input
+                    className="form-control"
+                    type="text"
+                    value={address}
+                    placeholder="City, address, or zip"
+                    onChange={(event) => setAddress(event.target.value)}
+                  />
+                </form>
+                <h2 className="mt-3 font-weight-bold" style={{ fontSize: '1.6em' }}>
+                  {geo.formatted_address}
+                </h2>
+                <hr />
                 {[2040, 2060, 2080, 2100].map((year) => {
                   return (
                     <a
@@ -209,6 +241,8 @@ export default function Location({ geo, results, query }) {
             <div className="px-4 py-4">
               <TemperatureSection results={results} />
               <PrecipitationSection className="mt-5" results={results} />
+              <hr className="mt-5" />
+              <Methodology className="mt-5" />
             </div>
           </div>
         </div>
