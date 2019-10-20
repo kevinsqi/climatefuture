@@ -290,7 +290,7 @@ function Sidebar({ geo, query }) {
     <div className="d-flex flex-column px-3 py-4" style={{ height: '100%' }}>
       <div style={{ flex: 1 }}>
         <div className="text-secondary" style={{ textTransform: 'uppercase', fontSize: 13 }}>
-          Local Climate Projections
+          Local Climate Impacts
         </div>
         <form className="mt-2" onSubmit={onSubmit}>
           <input
