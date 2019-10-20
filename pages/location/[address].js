@@ -63,12 +63,14 @@ function PrecipitationSection(props) {
             <DataNumber
               label="Middle case"
               value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
+              description={`Relative to 2019 projection of ${rcp45_weighted_mean_2019} days`}
             />
           </div>
           <div className="col-4">
             <DataNumber
               label="Worst case"
               value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
+              description={`Relative to 2019 projection of ${rcp85_weighted_mean_2019} days`}
             />
           </div>
         </div>
@@ -90,9 +92,9 @@ function formatNumberChange(diff, unit) {
 function DataNumber({ label, value, description }) {
   return (
     <div>
-      <div className="small font-weight-bold text-secondary">{label}</div>
+      <div className="small text-secondary font-weight-bold">{label}</div>
       <div style={{ fontSize: 25 }}>{value}</div>
-      <div className="text-secondary">{description}</div>
+      <div className="small text-secondary">{description}</div>
     </div>
   );
 }
@@ -116,11 +118,13 @@ function NumDaysAbove100F(props) {
       <div className="col-4">
         <DataNumber
           value={formatNumberChange(rcp45_weighted_mean - rcp45_weighted_mean_2019, unit)}
+          description={`Relative to 2019 projection of ${rcp45_weighted_mean_2019} days`}
         />
       </div>
       <div className="col-4">
         <DataNumber
           value={formatNumberChange(rcp85_weighted_mean - rcp85_weighted_mean_2019, unit)}
+          description={`Relative to 2019 projection of ${rcp85_weighted_mean_2019} days`}
         />
       </div>
     </div>
