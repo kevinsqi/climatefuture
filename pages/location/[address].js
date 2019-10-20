@@ -50,6 +50,7 @@ function FloodingSection(props) {
     return null;
   }
   const { rcp26, rcp45, rcp85 } = coastal_flooding_single_year_5ft;
+  const showAdvice = Number(rcp45) >= 0.1;
   return (
     <div className={props.className}>
       <h3 className="font-weight-bold" style={{ fontSize: '2.2em' }}>
@@ -68,6 +69,33 @@ function FloodingSection(props) {
           </div>
         </div>
       </div>
+      {showAdvice && (
+        <React.Fragment>
+          <div className="mt-5">
+            <div className="small text-secondary font-weight-bold">
+              How can I prepare short-term?
+            </div>
+            <div className="mt-2" style={{ fontSize: '1.2em', fontWeight: 600 }}>
+              <div>Have backup food, water, and medical supplies.</div>
+              <div>Unplug electrical equipment that might contact flood water.</div>
+              <div>Be careful of carbon monoxide poisoning when using portable generators.</div>
+            </div>
+          </div>
+          <div className="mt-5">
+            <div className="small text-secondary font-weight-bold">
+              How can I prepare long-term?
+            </div>
+            <div className="mt-2" style={{ fontSize: '1.2em', fontWeight: 600 }}>
+              <div>
+                Check if your home is in a floodplain at <a href="https://msc.fema.gov">FEMA</a>.
+              </div>
+              <div>Check if your home was built with flood damage-resistant materials.</div>
+              <div>Check if there are community floodwalls or levees.</div>
+              <div>Support local government in developing flood control plans.</div>
+            </div>
+          </div>
+        </React.Fragment>
+      )}
     </div>
   );
 }
@@ -232,7 +260,7 @@ function TemperatureSection(props) {
       {showAdvice && (
         <div className="mt-5">
           <div className="small text-secondary font-weight-bold">How can I prepare?</div>
-          <div className="mt-2" style={{ fontSize: '1.3em', fontWeight: 600 }}>
+          <div className="mt-2" style={{ fontSize: '1.2em', fontWeight: 600 }}>
             <div>Insulate windows.</div>
             <div>Install temporary window reflectors.</div>
             <div>Install cool or green roofs.</div>
