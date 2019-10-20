@@ -3,6 +3,14 @@ import Head from 'next/head';
 import Nav from '../components/nav';
 
 function Home() {
+  const [address, setAddress] = React.useState('');
+
+  function onSubmit(event) {
+    event.preventDefault();
+    // TODO: better string cleansing?
+    window.location = `/location/${address.replace(' ', '-')}`;
+  }
+
   return (
     <div>
       <Head>
@@ -13,10 +21,15 @@ function Home() {
       <Nav />
 
       <div>
-        <h1>LocalClimate</h1>
+        <h1>Local climate change</h1>
 
-        <form>
-          <input type="text" />
+        <form onSubmit={onSubmit}>
+          <input
+            type="text"
+            value={address}
+            placeholder="City, address, or zip"
+            onChange={(event) => setAddress(event.target.value)}
+          />
         </form>
       </div>
     </div>
