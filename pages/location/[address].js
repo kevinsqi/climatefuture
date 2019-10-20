@@ -317,7 +317,7 @@ function Sidebar({ geo, query }) {
             return (
               <a
                 className={Number(query.year) === year ? 'font-weight-bold' : ''}
-                style={{ color: '#444', fontSize: '1.2em' }}
+                style={{ color: '#444', fontSize: '1.4em' }}
                 href={`/location/${query.address}?year=${year}`}
               >
                 <div>{year}</div>
