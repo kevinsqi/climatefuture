@@ -1,0 +1,26 @@
+{
+  "name": "climate-change-projections-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "db:shell": "psql postgres://climate_change_projections_user@localhost/climate_change_projections",
+    "format": "prettier --write '*.js' '**/*.js'",
+    "start": "PORT=3001 nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.0",
+    "csv-parse": "^4.6.3",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "knex": "^0.19.5",
+    "morgan": "^1.9.1",
+    "pg": "^7.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.4",
+    "prettier": "^1.18.2"
+  }
+}
