@@ -1,0 +1,24 @@
+version: '3'
+services:
+  server:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgres://climatefuture_user:climatefuture_pass@postgres/climatefuture
+      - NODE_ENV=development
+      - PORT=3001
+    expose:
+      - 3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/usr/server
+      # Don't sync node_modules from host
+      - /usr/server/node_modules
+  postgres:
+    image: postgres:11.4
+    environment:
+      POSTGRES_DB: climatefuture
+      POSTGRES_PASSWORD: climatefuture_pass
+      POSTGRES_USER: climatefuture_user
