@@ -5,7 +5,7 @@ services:
     depends_on:
       - postgres
     environment:
-      - DATABASE_URL=postgres://climatefuture_user:climatefuture_pass@postgres/climatefuture
+      - DATABASE_URL=postgres://climatefuture_user@postgres/climatefuture
       - GOOGLE_MAPS_PLATFORM_KEY
       - NODE_ENV=development
       - PORT=3001
@@ -21,5 +21,4 @@ services:
     image: mdillon/postgis:11-alpine
     environment:
       POSTGRES_DB: climatefuture
-      POSTGRES_PASSWORD: climatefuture_pass
       POSTGRES_USER: climatefuture_user
