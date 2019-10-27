@@ -6,6 +6,7 @@
     "yarn": "1.19.1"
   },
   "scripts": {
+    "install": "cd server && yarn install",
     "start": "cd server && PORT=5000 yarn run start:production"
   },
   "repository": {
