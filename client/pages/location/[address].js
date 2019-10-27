@@ -315,6 +315,7 @@ function Sidebar({ geo, query }) {
                 className={Number(query.year) === year ? 'font-weight-bold' : ''}
                 style={{ color: '#444', fontSize: '1.4em' }}
                 href={`/location/${query.address}?year=${year}`}
+                key={year}
               >
                 <div>{year}</div>
               </a>
@@ -376,7 +377,6 @@ Location.getInitialProps = async function(context) {
 
   const response = await fetch(`http://localhost:3001/api/location?${paramString}`);
   const data = await response.json();
-  console.log('Data:', data.results);
   return {
     query: query,
     geo: data.geo,
