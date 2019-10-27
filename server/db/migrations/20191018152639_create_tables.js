@@ -70,7 +70,7 @@ exports.down = function(knex) {
   return Promise.all([
     knex.schema.raw(`DROP TABLE temperatures_cmip5`),
     knex.schema.raw(`DROP TABLE noaa_projections`),
+    knex.schema.raw(`DROP TABLE noaa_observations`),
     knex.schema.raw(`DROP TABLE climate_central_sea_levels`),
-    // TODO: add noaa_observations
   ]);
 };
