@@ -15,14 +15,14 @@ Warning: installing these may take a while.
 Create user and DB:
 
 ```
-createuser climate_change_projections_user --createdb
-createdb climate_change_projections -U climate_change_projections_user
+createuser climatefuture_user --createdb
+createdb climatefuture -U climatefuture_user
 ```
 
 Creating extension in psql (requires superuser):
 
 ```
-psql climate_change_projections
+psql climatefuture
 CREATE EXTENSION postgis;
 ```
 
@@ -46,7 +46,7 @@ yarn start
 Console:
 
 ```
-psql climate_change_projections -U climate_change_projections_user
+psql climatefuture -U climatefuture_user
 ```
 
 New migration:
@@ -58,7 +58,7 @@ node_modules/.bin/knex --knexfile ./db/knexfile.js migrate:make [MIGRATION_NAME]
 Reset seed data:
 
 ```
-psql -U climate_change_projections_user -d climate_change_projections -c 'DELETE FROM temperatures_cmip5; DELETE FROM noaa_projections; DELETE FROM climate_central_sea_levels;'
+psql -U climatefuture_user -d climatefuture -c 'DELETE FROM temperatures_cmip5; DELETE FROM noaa_projections; DELETE FROM climate_central_sea_levels;'
 node_modules/.bin/knex --knexfile ./db/knexfile.js seed:run
 ```
 

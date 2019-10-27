@@ -26,15 +26,12 @@ function Methodology(props) {
           {SCENARIOS.RCP_85}" uses RCP 8.5.
         </div>
         <div>
-          <a
-            className="text-secondary"
-            href="https://github.com/kevinsqi/climate-change-projections-server"
-          >
+          <a className="text-secondary" href="https://github.com/kevinsqi/climatefuture">
             View source code.
           </a>{' '}
           <a
             className="text-secondary"
-            href="https://github.com/kevinsqi/climate-change-projections-server/tree/master/data"
+            href="https://github.com/kevinsqi/climatefuture/tree/master/server/data"
           >
             View data sources.
           </a>
@@ -331,7 +328,7 @@ export default function Location({ geo, results, query }) {
   return (
     <div>
       <Head>
-        <title>Climate Change Projections</title>
+        <title>{geo.formatted_address} | ClimateFuture</title>
         <link rel="icon" href="/favicon.ico" />
         <link
           rel="stylesheet"

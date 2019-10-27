@@ -14,7 +14,7 @@ function Home() {
   return (
     <div>
       <Head>
-        <title>Climate Change Projections</title>
+        <title>ClimateFuture</title>
         <link rel="icon" href="/favicon.ico" />
         <link
           rel="stylesheet"

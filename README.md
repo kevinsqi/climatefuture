@@ -1,4 +1,4 @@
-## Climate Change Projections
+## ClimateFuture
 
 ## Setup
 
