@@ -12,4 +12,4 @@ yarn install
 yarn dev
 ```
 
-Go to http://localhost:3000/location/san+francisco to try it out.
+Go to http://localhost:3000/location/san-francisco to try it out.
