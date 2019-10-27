@@ -372,7 +372,7 @@ Location.getInitialProps = async function(context) {
   };
   const paramString = queryString.stringify(query);
 
-  const response = await fetch(`http://localhost:3001/api/location?${paramString}`);
+  const response = await fetch(`${process.env.API_HOST}/api/location?${paramString}`);
   const data = await response.json();
   return {
     query: query,

@@ -34,6 +34,11 @@ SSH setup:
 * Create app: `dokku apps:create climatefuture`
 * Create postgres plugin if it doesn't exist: `sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git`
 * Create postgres service: `dokku postgres:create climatefuture`
-* Link postgres to application: `dokku postgres:link climatefuture climatefuture`
+* Link postgres to application (this sets `DATABASE_URL` env var): `dokku postgres:link climatefuture climatefuture`
 * Add dokku remote: `git remote add dokku dokku@climatefuture.io:climatefuture`
 * Push to dokku: `git push dokku master`
+
+Configuration:
+
+* Add domains: `dokku domains:add climatefuture api.climatefuture.io`
+* Add env vars (find in 1password "ClimateFuture"): `dokku config:set climatefuture GOOGLE_MAPS_PLATFORM_KEY=<key>`
