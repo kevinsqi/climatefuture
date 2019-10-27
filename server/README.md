@@ -36,3 +36,4 @@ SSH setup:
 * Create postgres service: `dokku postgres:create climatefuture`
 * Link postgres to application: `dokku postgres:link climatefuture climatefuture`
 * Add dokku remote: `git remote add dokku dokku@climatefuture.io:climatefuture`
+* Push to dokku: `git push dokku master`
