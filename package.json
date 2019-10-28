@@ -2,8 +2,8 @@
   "name": "climatefuture",
   "version": "1.0.0",
   "engines": {
-    "node": "12.11.1",
-    "yarn": "1.19.1"
+    "node": "~12.11.1",
+    "yarn": "~1.19.0"
   },
   "scripts": {
     "install": "cd server && yarn install",
