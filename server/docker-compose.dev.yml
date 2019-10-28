@@ -1,8 +1,7 @@
 version: '3'
 services:
   server:
-    image: kevinsqi/climatefuture
-    restart: always
+    build: .
     depends_on:
       - postgres
     environment:
@@ -14,6 +13,10 @@ services:
       - 3001
     ports:
       - "3001:3001"
+    volumes:
+      - .:/usr/server
+      # Don't sync node_modules from host
+      - /usr/server/node_modules
   postgres:
     image: mdillon/postgis:11-alpine
     environment:
@@ -22,7 +25,4 @@ services:
     volumes:
       # Load schema and seed data when postgres is initialized
       - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - dbdata:/var/lib/postgresql/data
-
-volumes:
-  dbdata:
+      - ./postgres-data:/var/lib/postgresql/data
