@@ -33,7 +33,8 @@ SSH setup:
 * SSH into dokku droplet: `ssh root@climatefuture.io`
 * Create app: `dokku apps:create climatefuture`
 * Create postgres plugin if it doesn't exist: `sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git`
-* Create postgres service: `dokku postgres:create climatefuture`
+* [Pull postgis docker image](https://github.com/dokku/dokku-postgres/issues/52): `docker pull mdillon/postgis:11-alpine`
+* Create postgres service with postgis image (sudo is needed): `sudo POSTGRES_IMAGE=mdillon/postgis POSTGRES_IMAGE_VERSION=11-alpine dokku postgres:create climatefuture`
 * Link postgres to application (this sets `DATABASE_URL` env var): `dokku postgres:link climatefuture climatefuture`
 * Add dokku remote: `git remote add dokku dokku@climatefuture.io:climatefuture`
 * Push to dokku: `git push dokku master`
