@@ -9,8 +9,6 @@ services:
       - GOOGLE_MAPS_PLATFORM_KEY
       - NODE_ENV=development
       - PORT=3001
-    expose:
-      - 3001
     ports:
       - "3001:3001"
     volumes:

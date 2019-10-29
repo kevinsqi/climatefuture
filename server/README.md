@@ -23,23 +23,16 @@ docker-compose up
 
 ## Deploying to production
 
-SSH setup:
+https://medium.com/@xoor/deploying-a-node-js-app-to-aws-elastic-beanstalk-681fa88bac53
 
-* [Upload your public ssh key](https://www.digitalocean.com/docs/droplets/how-to/add-ssh-keys/to-existing-droplet/) to the droplet to be able to SSH into droplet with `ssh root@climatefuture.io`
-* [Add your SSH key to dokku](http://dokku.viewdocs.io/dokku/deployment/user-management/#adding-ssh-keys) to be able to run `git push dokku master`
+Install elastic beanstalk CLI:
 
-[Deploying](http://dokku.viewdocs.io/dokku~v0.12.13/deployment/application-deployment/):
+```
+pip3 install awsebcli
+```
 
-* SSH into dokku droplet: `ssh root@climatefuture.io`
-* Create app: `dokku apps:create climatefuture`
-* Create postgres plugin if it doesn't exist: `sudo dokku plugin:install https://github.com/dokku/dokku-postgres.git`
-* [Pull postgis docker image](https://github.com/dokku/dokku-postgres/issues/52): `docker pull mdillon/postgis:11-alpine`
-* Create postgres service with postgis image (sudo is needed): `sudo POSTGRES_IMAGE=mdillon/postgis POSTGRES_IMAGE_VERSION=11-alpine dokku postgres:create climatefuture`
-* Link postgres to application (this sets `DATABASE_URL` env var): `dokku postgres:link climatefuture climatefuture`
-* Add dokku remote: `git remote add dokku dokku@climatefuture.io:climatefuture`
-* Push to dokku: `git push dokku master`
-
-Configuration:
-
-* Add domains: `dokku domains:add climatefuture api.climatefuture.io`
-* Add env vars (find in 1password "ClimateFuture"): `dokku config:set climatefuture GOOGLE_MAPS_PLATFORM_KEY=<key>`
+```
+aws configure --profile climatefuture-deploy
+eb init --profile climatefuture-deploy
+eb create
+```
