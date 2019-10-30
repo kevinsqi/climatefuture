@@ -118,7 +118,11 @@ router.get('/location', (req, res) => {
 });
 
 router.get('/health', (req, res) => {
-  return res.status(200).json({});
+  return res.status(200).json({
+    db: {
+      host: process.env.RDS_HOSTNAME,
+    },
+  });
 });
 app.use('/api', router);
 
