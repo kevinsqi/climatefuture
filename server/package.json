@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "db:dump": "docker exec server_postgres_1 pg_dump -U climatefuture_user climatefuture > data/climatefuture.sql",
-    "db:load": "cat data/climatefuture.sql | docker exec -i server_postgres_1 psql -U climatefuture_user -d climatefuture",
+    "db:load": "cat data/init.sql | psql $DATABASE_URL",
     "db:migrate": "knex --knexfile db/knexfile.js migrate:latest",
     "db:seed": "knex --knexfile db/knexfile.js seed:run",
     "db:setup": "npm-run-all db:migrate db:seed",
