@@ -116,6 +116,10 @@ router.get('/location', (req, res) => {
       console.error(error);
     });
 });
+
+router.get('/health', (req, res) => {
+  return res.status(200).json({});
+});
 app.use('/api', router);
 
 // Listen

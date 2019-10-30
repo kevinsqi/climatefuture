@@ -31,8 +31,20 @@ Install elastic beanstalk CLI:
 pip3 install awsebcli
 ```
 
+Provision an RDS database with [this guide](https://docs.aws.amazon.com/en_pv/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html).
+
+Configuring:
+
 ```
 aws configure --profile climatefuture-deploy
 eb init --profile climatefuture-deploy
 eb create
+eb setenv GOOGLE_MAPS_PLATFORM_KEY=<key>
+eb setenv RDS_HOSTNAME=<host> RDS_PORT=<port> RDS_DB_NAME=<name> RDS_USERNAME=<user> RDS_PASSWORD=<pass>
+```
+
+Deploying:
+
+```
+eb deploy
 ```
