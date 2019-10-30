@@ -45,12 +45,5 @@ SSH setup:
   * `dokku enter climatefuture`
   * `cd server`
   * `yarn run db:load`
-
-Client app:
-
-* `dokku apps:create climatefuture-client`
-
-Configuration:
-
 * Add domains: `dokku domains:add climatefuture api.climatefuture.io`
 * Add env vars (find in 1password "ClimateFuture"): `dokku config:set climatefuture GOOGLE_MAPS_PLATFORM_KEY=<key>`
