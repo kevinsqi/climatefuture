@@ -32,17 +32,16 @@ router.get('/location', (req, res) => {
         return res.status(404).json({ error: 'NO_GEOCODING_RESULTS' });
       }
       const { lat, lng } = response.data.results[0].geometry.location;
-      // TODO: fix sql injection, '?' and bindings isn't working with <->?
       return Promise.all([
         Promise.resolve(response.data.results[0]),
         knex.raw(
           `
             SELECT * FROM temperatures_cmip5
-            WHERE year_start <= ?
-            ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+            WHERE year_start <= :year
+            ORDER BY geography <-> :geo
             LIMIT 1
           `,
-          [req.query.year],
+          { year: req.query.year, geo: `SRID=4326;POINT(${lng} ${lat})` },
         ),
         knex.raw(
           `
