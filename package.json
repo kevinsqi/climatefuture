@@ -10,10 +10,9 @@
     "db:seed": "knex --knexfile db/knexfile.js seed:run",
     "db:setup": "npm-run-all db:migrate db:seed",
     "db:shell": "docker exec -it server_postgres_1 psql postgres://climatefuture_user@postgres/climatefuture",
+    "dev": "PORT=3001 nodemon app.js",
     "format": "prettier --write '*.js' '**/*.js'",
-    "start": "npm-run-all start:development",
-    "start:development": "PORT=3001 nodemon app.js",
-    "start:production": "node app.js"
+    "start": "PORT=5000 node app.js"
   },
   "author": "",
   "license": "ISC",

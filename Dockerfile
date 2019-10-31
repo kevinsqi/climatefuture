@@ -10,4 +10,4 @@ RUN yarn install
 # Copy app source code into docker image
 COPY . .
 
-CMD ["yarn", "start"]
+CMD ["yarn", "run", "dev"]
