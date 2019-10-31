@@ -1,4 +1,6 @@
-# ClimateFuture server
+# ClimateFuture API
+
+This is the API server that powers [climatefuture.io](https://www.climatefuture.io/). The frontend code is at [kevinsqi/climatefuture-client](https://github.com/kevinsqi/climatefuture-client).
 
 ## Setup
 
