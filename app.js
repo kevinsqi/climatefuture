@@ -21,12 +21,14 @@ router.get('/location', (req, res) => {
     return res.status(400).json({ error: 'MISSING_YEAR' });
   }
   axios
+    // Geocode location
     .get('https://maps.googleapis.com/maps/api/geocode/json', {
       params: {
         address: req.query.address,
         key: process.env.GOOGLE_MAPS_PLATFORM_KEY,
       },
     })
+    // Query relevant data based on location
     .then((response) => {
       if (response.data.results.length === 0) {
         return res.status(404).json({ error: 'NO_GEOCODING_RESULTS' });
