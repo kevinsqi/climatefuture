@@ -32,76 +32,88 @@ router.get('/location', (req, res) => {
         return res.status(404).json({ error: 'NO_GEOCODING_RESULTS' });
       }
       const { lat, lng } = response.data.results[0].geometry.location;
-      // TODO: fix sql injection, '?' and bindings isn't working with <->?
+      const MAX_DISTANCE = 50000;
       return Promise.all([
         Promise.resolve(response.data.results[0]),
         knex.raw(
           `
             SELECT * FROM temperatures_cmip5
-            WHERE year_start <= ?
-            ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+            WHERE year_start <= :year
+            ORDER BY geography <-> :point
             LIMIT 1
           `,
-          [req.query.year],
+          { year: req.query.year, point: `SRID=4326;POINT(${lng} ${lat})` },
         ),
         knex.raw(
           `
             SELECT *, (
               SELECT num_days_above_100f FROM noaa_observations
               WHERE ST_Distance(
-                ST_Transform('SRID=4326;POINT(${lng} ${lat})'::geometry, 3857),
+                ST_Transform(:point::geometry, 3857),
                 ST_Transform(noaa_observations.geography::geometry, 3857)
-              ) < 50000
-              ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+              ) < :maxdistance
+              ORDER BY geography <-> :point
               LIMIT 1
             ) as historical_average
             FROM noaa_projections
             WHERE ST_Distance(
-              ST_Transform('SRID=4326;POINT(${lng} ${lat})'::geometry, 3857),
+              ST_Transform(:point::geometry, 3857),
               ST_Transform(noaa_projections.geography::geometry, 3857)
-            ) < 50000
+            ) < :maxdistance
             AND attribute = 'num_days_above_100f'
-            AND year = ?
-            ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+            AND year = :year
+            ORDER BY geography <-> :point
             LIMIT 1
           `,
-          [req.query.year],
+          {
+            year: req.query.year,
+            point: `SRID=4326;POINT(${lng} ${lat})`,
+            maxdistance: MAX_DISTANCE,
+          },
         ),
         knex.raw(
           `
             SELECT *, (
               SELECT num_dry_days FROM noaa_observations
               WHERE ST_Distance(
-                ST_Transform('SRID=4326;POINT(${lng} ${lat})'::geometry, 3857),
+                ST_Transform(:point::geometry, 3857),
                 ST_Transform(noaa_observations.geography::geometry, 3857)
-              ) < 50000
-              ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+              ) < :maxdistance
+              ORDER BY geography <-> :point
               LIMIT 1
             ) as historical_average
             FROM noaa_projections
             WHERE ST_Distance(
-              ST_Transform('SRID=4326;POINT(${lng} ${lat})'::geometry, 3857),
+              ST_Transform(:point::geometry, 3857),
               ST_Transform(noaa_projections.geography::geometry, 3857)
-            ) < 50000
+            ) < :maxdistance
             AND attribute = 'num_dry_days'
-            AND year = ?
-            ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+            AND year = :year
+            ORDER BY geography <-> :point
             LIMIT 1
           `,
-          [req.query.year],
+          {
+            year: req.query.year,
+            point: `SRID=4326;POINT(${lng} ${lat})`,
+            maxdistance: MAX_DISTANCE,
+          },
         ),
         knex.raw(
           `
             SELECT * FROM climate_central_sea_levels
             WHERE ST_Distance(
-              ST_Transform('SRID=4326;POINT(${lng} ${lat})'::geometry, 3857),
+              ST_Transform(:point::geometry, 3857),
               ST_Transform(climate_central_sea_levels.geography::geometry, 3857)
-            ) < 50000
-            AND year = ?
-            ORDER BY geography <-> 'SRID=4326;POINT(${lng} ${lat})'
+            ) < :maxdistance
+            AND year = :year
+            ORDER BY geography <-> :point
             LIMIT 1
           `,
-          [req.query.year],
+          {
+            year: req.query.year,
+            point: `SRID=4326;POINT(${lng} ${lat})`,
+            maxdistance: MAX_DISTANCE,
+          },
         ),
       ]);
     })
