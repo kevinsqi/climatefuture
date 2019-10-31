@@ -32,7 +32,7 @@ router.get('/location', (req, res) => {
         return res.status(404).json({ error: 'NO_GEOCODING_RESULTS' });
       }
       const { lat, lng } = response.data.results[0].geometry.location;
-      // TODO: constantize 50000 threshold
+      const MAX_DISTANCE = 50000;
       return Promise.all([
         Promise.resolve(response.data.results[0]),
         knex.raw(
@@ -51,7 +51,7 @@ router.get('/location', (req, res) => {
               WHERE ST_Distance(
                 ST_Transform(:point::geometry, 3857),
                 ST_Transform(noaa_observations.geography::geometry, 3857)
-              ) < 50000
+              ) < :maxdistance
               ORDER BY geography <-> :point
               LIMIT 1
             ) as historical_average
@@ -59,13 +59,17 @@ router.get('/location', (req, res) => {
             WHERE ST_Distance(
               ST_Transform(:point::geometry, 3857),
               ST_Transform(noaa_projections.geography::geometry, 3857)
-            ) < 50000
+            ) < :maxdistance
             AND attribute = 'num_days_above_100f'
             AND year = :year
             ORDER BY geography <-> :point
             LIMIT 1
           `,
-          { year: req.query.year, point: `SRID=4326;POINT(${lng} ${lat})` },
+          {
+            year: req.query.year,
+            point: `SRID=4326;POINT(${lng} ${lat})`,
+            maxdistance: MAX_DISTANCE,
+          },
         ),
         knex.raw(
           `
@@ -74,7 +78,7 @@ router.get('/location', (req, res) => {
               WHERE ST_Distance(
                 ST_Transform(:point::geometry, 3857),
                 ST_Transform(noaa_observations.geography::geometry, 3857)
-              ) < 50000
+              ) < :maxdistance
               ORDER BY geography <-> :point
               LIMIT 1
             ) as historical_average
@@ -82,13 +86,17 @@ router.get('/location', (req, res) => {
             WHERE ST_Distance(
               ST_Transform(:point::geometry, 3857),
               ST_Transform(noaa_projections.geography::geometry, 3857)
-            ) < 50000
+            ) < :maxdistance
             AND attribute = 'num_dry_days'
             AND year = :year
             ORDER BY geography <-> :point
             LIMIT 1
           `,
-          { year: req.query.year, point: `SRID=4326;POINT(${lng} ${lat})` },
+          {
+            year: req.query.year,
+            point: `SRID=4326;POINT(${lng} ${lat})`,
+            maxdistance: MAX_DISTANCE,
+          },
         ),
         knex.raw(
           `
@@ -96,12 +104,16 @@ router.get('/location', (req, res) => {
             WHERE ST_Distance(
               ST_Transform(:point::geometry, 3857),
               ST_Transform(climate_central_sea_levels.geography::geometry, 3857)
-            ) < 50000
+            ) < :maxdistance
             AND year = :year
             ORDER BY geography <-> :point
             LIMIT 1
           `,
-          { year: req.query.year, point: `SRID=4326;POINT(${lng} ${lat})` },
+          {
+            year: req.query.year,
+            point: `SRID=4326;POINT(${lng} ${lat})`,
+            maxdistance: MAX_DISTANCE,
+          },
         ),
       ]);
     })
