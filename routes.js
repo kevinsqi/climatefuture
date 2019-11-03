@@ -104,30 +104,34 @@ async function getProjections({ lat, lng, year, maxDistance }) {
   ]);
 }
 
-router.get('/locations', async (req, res) => {
-  // Validate params
-  if (!req.query.address) {
-    return res.status(400).json({ error: 'MISSING_ADDRESS' });
+router.get('/locations', async (req, res, next) => {
+  try {
+    // Validate params
+    if (!req.query.address) {
+      return res.status(400).json({ error: 'MISSING_ADDRESS' });
+    }
+    if (!req.query.year) {
+      return res.status(400).json({ error: 'MISSING_YEAR' });
+    }
+
+    const geo = await geocodeLocation(req.query.address);
+    const { lat, lng } = geo.geometry.location;
+
+    const dbResults = await getProjections({
+      lat,
+      lng,
+      year: req.query.year,
+      maxDistance: 50000,
+    });
+    const results = dbResults.map((result) => result.rows[0]).filter((result) => result);
+
+    return res.status(200).json({
+      geo,
+      results,
+    });
+  } catch (error) {
+    return next(error);
   }
-  if (!req.query.year) {
-    return res.status(400).json({ error: 'MISSING_YEAR' });
-  }
-
-  const geo = await geocodeLocation(req.query.address);
-  const { lat, lng } = geo.geometry.location;
-
-  const dbResults = await getProjections({
-    lat,
-    lng,
-    year: req.query.year,
-    maxDistance: 50000,
-  });
-  const results = dbResults.map((result) => result.rows[0]).filter((result) => result);
-
-  return res.status(200).json({
-    geo,
-    results,
-  });
 });
 
 module.exports = router;
