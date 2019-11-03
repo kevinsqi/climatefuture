@@ -107,6 +107,59 @@ async function getProjections({ lat, lng, year, maxDistance }) {
   return results.map((result) => result.rows[0]).filter((result) => result);
 }
 
+async function getAcisProjections({ lat, lng, year }) {
+  const params = {
+    loc: `${lng},${lat}`,
+    date: `${year}`,
+    grid: 'loca:wmean:rcp85',
+    elems: [
+      {
+        name: 'maxt',
+        interval: 'yly',
+        duration: 'yly',
+        reduce: 'cnt_gt_100',
+      },
+      {
+        name: 'maxt',
+        interval: 'yly',
+        duration: 'yly',
+        reduce: 'mean',
+      },
+      {
+        name: 'mint',
+        interval: 'yly',
+        duration: 'yly',
+        reduce: 'cnt_lt_32',
+      },
+      {
+        name: 'pcpn',
+        interval: 'yly',
+        duration: 'yly',
+        reduce: 'cnt_lt_0.01',
+      },
+      {
+        name: 'pcpn',
+        interval: 'yly',
+        duration: 'yly',
+        reduce: 'sum',
+        units: 'inch',
+      },
+    ],
+  };
+  const response = await axios.post('https://grid2.rcc-acis.org/GridData', params);
+  const elemNames = params.elems.map((elem) => `${elem.name},${elem.reduce}`);
+
+  const [yearValue, ...elemValues] = response.data.data[0];
+
+  if (Number(year) !== Number(yearValue) || elemValues.length !== elemNames.length) {
+    throw new Error('Unexpected data in response');
+  }
+
+  return elemNames.map((name, idx) => {
+    return { name, value: elemValues[idx] };
+  });
+}
+
 router.get('/locations', async (req, res, next) => {
   try {
     // Validate params
@@ -126,11 +179,16 @@ router.get('/locations', async (req, res, next) => {
       maxDistance: 50000,
     });
 
+    // TODO get historical results with https://github.com/nemac/climate-explorer/blob/716cb7c33fb44e24ec0fadb7569e70d545ca2a30/resources/vendor/climate-widget-graph/src/main.js#L1030-L1045
+    const acisResults = await getAcisProjections({ lat, lng, year: req.query.year });
+    console.log('acisResults', acisResults);
+
     return res.status(200).json({
       geo,
       results,
     });
   } catch (error) {
+    console.error(error);
     return next(error);
   }
 });
