@@ -1,8 +1,45 @@
 const express = require('express');
 const axios = require('axios');
 const knex = require('./db/knex');
+const _ = require('lodash');
 
 const router = express.Router();
+
+const ACIS_API_ENDPOINT = 'https://grid2.rcc-acis.org/GridData';
+
+const ACIS_ELEMS = [
+  {
+    name: 'maxt',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'cnt_gt_100',
+  },
+  {
+    name: 'maxt',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'mean',
+  },
+  {
+    name: 'mint',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'cnt_lt_32',
+  },
+  {
+    name: 'pcpn',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'cnt_lt_0.01',
+  },
+  {
+    name: 'pcpn',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'sum',
+    units: 'inch',
+  },
+];
 
 async function geocodeLocation(address) {
   const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
@@ -17,6 +54,18 @@ async function geocodeLocation(address) {
   }
 
   return response.data.results[0];
+}
+
+async function getCounty({ lat, lng }) {
+  const response = await axios.get('https://geo.fcc.gov/api/census/block/find', {
+    params: {
+      latitude: lat,
+      longitude: lng,
+      format: 'json',
+    },
+  });
+
+  return response.data.County.FIPS;
 }
 
 async function getProjections({ lat, lng, year, maxDistance }) {
@@ -109,54 +158,41 @@ async function getProjections({ lat, lng, year, maxDistance }) {
 
 async function getAcisProjections({ lat, lng, year }) {
   const params = {
+    grid: 'loca:wmean:rcp85',
     loc: `${lng},${lat}`,
     date: `${year}`,
-    grid: 'loca:wmean:rcp85',
-    elems: [
-      {
-        name: 'maxt',
-        interval: 'yly',
-        duration: 'yly',
-        reduce: 'cnt_gt_100',
-      },
-      {
-        name: 'maxt',
-        interval: 'yly',
-        duration: 'yly',
-        reduce: 'mean',
-      },
-      {
-        name: 'mint',
-        interval: 'yly',
-        duration: 'yly',
-        reduce: 'cnt_lt_32',
-      },
-      {
-        name: 'pcpn',
-        interval: 'yly',
-        duration: 'yly',
-        reduce: 'cnt_lt_0.01',
-      },
-      {
-        name: 'pcpn',
-        interval: 'yly',
-        duration: 'yly',
-        reduce: 'sum',
-        units: 'inch',
-      },
-    ],
+    elems: ACIS_ELEMS,
   };
-  const response = await axios.post('https://grid2.rcc-acis.org/GridData', params);
+  const response = await axios.post(ACIS_API_ENDPOINT, params);
   const elemNames = params.elems.map((elem) => `${elem.name},${elem.reduce}`);
-
   const [yearValue, ...elemValues] = response.data.data[0];
 
   if (Number(year) !== Number(yearValue) || elemValues.length !== elemNames.length) {
-    throw new Error('Unexpected data in response');
+    throw new Error('Unexpected year or elems');
   }
 
   return elemNames.map((name, idx) => {
     return { name, value: elemValues[idx] };
+  });
+}
+
+async function getAcisObservations({ lat, lng, dateStart, dateEnd }) {
+  const params = {
+    grid: 'livneh',
+    loc: `${lng},${lat}`,
+    sdate: dateStart,
+    edate: dateEnd,
+    elems: ACIS_ELEMS,
+  };
+  const response = await axios.post(ACIS_API_ENDPOINT, params);
+  const elemNames = params.elems.map((elem) => `${elem.name},${elem.reduce}`);
+
+  const dataByYear = response.data.data;
+  return elemNames.map((name, idx) => {
+    return {
+      name,
+      value: _.mean(dataByYear.map((row) => row[idx + 1])),
+    };
   });
 }
 
@@ -170,8 +206,10 @@ router.get('/locations', async (req, res, next) => {
       return res.status(400).json({ error: 'MISSING_YEAR' });
     }
 
+    // Location
     const geo = await geocodeLocation(req.query.address);
     const { lat, lng } = geo.geometry.location;
+
     const results = await getProjections({
       lat,
       lng,
@@ -179,9 +217,16 @@ router.get('/locations', async (req, res, next) => {
       maxDistance: 50000,
     });
 
-    // TODO get historical results with https://github.com/nemac/climate-explorer/blob/716cb7c33fb44e24ec0fadb7569e70d545ca2a30/resources/vendor/climate-widget-graph/src/main.js#L1030-L1045
+    // TODO: promise.all with other stuff
     const acisResults = await getAcisProjections({ lat, lng, year: req.query.year });
+    const acisObsResults = await getAcisObservations({
+      lat,
+      lng,
+      dateStart: `1950-01-01`,
+      dateEnd: `2013-01-01`, // Observation data stops at 2013
+    });
     console.log('acisResults', acisResults);
+    console.dir(acisObsResults, { depth: null });
 
     return res.status(200).json({
       geo,
