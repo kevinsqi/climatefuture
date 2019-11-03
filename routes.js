@@ -20,7 +20,7 @@ async function geocodeLocation(address) {
 }
 
 async function getProjections({ lat, lng, year, maxDistance }) {
-  return Promise.all([
+  const results = await Promise.all([
     knex.raw(
       `
         SELECT * FROM temperatures_cmip5
@@ -102,6 +102,9 @@ async function getProjections({ lat, lng, year, maxDistance }) {
       },
     ),
   ]);
+
+  // Get first row of each result, and filter out nulls
+  return results.map((result) => result.rows[0]).filter((result) => result);
 }
 
 router.get('/locations', async (req, res, next) => {
@@ -116,14 +119,12 @@ router.get('/locations', async (req, res, next) => {
 
     const geo = await geocodeLocation(req.query.address);
     const { lat, lng } = geo.geometry.location;
-
-    const dbResults = await getProjections({
+    const results = await getProjections({
       lat,
       lng,
       year: req.query.year,
       maxDistance: 50000,
     });
-    const results = dbResults.map((result) => result.rows[0]).filter((result) => result);
 
     return res.status(200).json({
       geo,
