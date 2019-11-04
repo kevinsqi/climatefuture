@@ -83,60 +83,6 @@ async function getProjections({ lat, lng, year, maxDistance }) {
     ),
     knex.raw(
       `
-        SELECT *, (
-          SELECT num_days_above_100f FROM noaa_observations
-          WHERE ST_Distance(
-            ST_Transform(:point::geometry, 3857),
-            ST_Transform(noaa_observations.geography::geometry, 3857)
-          ) < :maxDistance
-          ORDER BY geography <-> :point
-          LIMIT 1
-        ) as historical_average
-        FROM noaa_projections
-        WHERE ST_Distance(
-          ST_Transform(:point::geometry, 3857),
-          ST_Transform(noaa_projections.geography::geometry, 3857)
-        ) < :maxDistance
-        AND attribute = 'num_days_above_100f'
-        AND year = :year
-        ORDER BY geography <-> :point
-        LIMIT 1
-      `,
-      {
-        year,
-        point: `SRID=4326;POINT(${lng} ${lat})`,
-        maxDistance,
-      },
-    ),
-    knex.raw(
-      `
-        SELECT *, (
-          SELECT num_dry_days FROM noaa_observations
-          WHERE ST_Distance(
-            ST_Transform(:point::geometry, 3857),
-            ST_Transform(noaa_observations.geography::geometry, 3857)
-          ) < :maxDistance
-          ORDER BY geography <-> :point
-          LIMIT 1
-        ) as historical_average
-        FROM noaa_projections
-        WHERE ST_Distance(
-          ST_Transform(:point::geometry, 3857),
-          ST_Transform(noaa_projections.geography::geometry, 3857)
-        ) < :maxDistance
-        AND attribute = 'num_dry_days'
-        AND year = :year
-        ORDER BY geography <-> :point
-        LIMIT 1
-      `,
-      {
-        year,
-        point: `SRID=4326;POINT(${lng} ${lat})`,
-        maxDistance,
-      },
-    ),
-    knex.raw(
-      `
         SELECT * FROM climate_central_sea_levels
         WHERE ST_Distance(
           ST_Transform(:point::geometry, 3857),
