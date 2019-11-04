@@ -21,7 +21,7 @@ const ACIS_ELEMS = [
     reduce: 'cnt_gt_90',
   },
   {
-    name: 'maxt',
+    name: 'avgt',
     interval: 'yly',
     duration: 'yly',
     reduce: 'mean',
@@ -51,7 +51,7 @@ const ACIS_ELEM_NAMES = ACIS_ELEMS.map((elem) => `${elem.name}:${elem.reduce}`);
 const ACIS_ELEM_NAME_TO_ATTRIBUTE = {
   'maxt:cnt_gt_100': 'temp_num_days_above_100f',
   'maxt:cnt_gt_90': 'temp_num_days_above_90f',
-  'maxt:mean': 'temp_max_avg',
+  'avgt:mean': 'temp_avg',
   'mint:cnt_lt_32': 'temp_num_days_below_32f',
   'pcpn:cnt_lt_0.01': 'precipitation_num_dry_days',
   'pcpn:sum': 'precipitation_total',
