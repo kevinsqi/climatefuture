@@ -129,7 +129,18 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
     date: `${year}`,
     elems: ACIS_ELEMS,
   };
-  const response = await axios.post(ACIS_API_ENDPOINT, params);
+  try {
+    const response = await axios.post(ACIS_API_ENDPOINT, params);
+  } catch (errorResponse) {
+    if (errorResponse.response && errorResponse.response.data) {
+      const { status, error } = errorResponse.response.data;
+      if (status === 'Invalid request.' && error === 'bad ur') {
+        // No data available for location, handle gracefully.
+        return {};
+      }
+    }
+    throw errorResponse;
+  }
   const [yearValue, ...elemValues] = response.data.data[0];
 
   if (Number(year) !== Number(yearValue) || elemValues.length !== ACIS_ELEM_NAMES.length) {
@@ -156,7 +167,18 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
     edate: dateEnd,
     elems: ACIS_ELEMS,
   };
-  const response = await axios.post(ACIS_API_ENDPOINT, params);
+  try {
+    const response = await axios.post(ACIS_API_ENDPOINT, params);
+  } catch (errorResponse) {
+    if (errorResponse.response && errorResponse.response.data) {
+      const { status, error } = errorResponse.response.data;
+      if (status === 'Invalid request.' && error === 'bad ur') {
+        // No data available for location, handle gracefully.
+        return {};
+      }
+    }
+    throw errorResponse;
+  }
   const dataByYear = response.data.data;
   return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
     obj[name] = _.mean(
