@@ -42,6 +42,16 @@ const ACIS_ELEMS = [
 ];
 
 const ACIS_ELEM_NAMES = ACIS_ELEMS.map((elem) => `${elem.name}:${elem.reduce}`);
+const ACIS_ELEM_NAME_TO_ATTRIBUTE = {
+  'maxt:cnt_gt_100': 'temp_num_days_above_100f',
+  'maxt:mean': 'temp_avg',
+  'mint:cnt_lt_32': 'temp_num_days_below_32f',
+  'pcpn:cnt_lt_0.01': 'precipitation_num_dry_days',
+  'pcpn:sum': 'precipitation_total',
+};
+if (!ACIS_ELEM_NAMES.every((name) => ACIS_ELEM_NAME_TO_ATTRIBUTE[name])) {
+  throw new Error(`Missing name mapping for ${name}`);
+}
 
 async function geocodeLocation(address) {
   const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
@@ -181,15 +191,15 @@ router.get('/locations', async (req, res, next) => {
     ]);
 
     const acisResults = ACIS_ELEM_NAMES.map((name) => {
+      const attribute = ACIS_ELEM_NAME_TO_ATTRIBUTE[name];
       return {
-        name,
-        rcp45: rcp45[name],
-        rcp85: rcp85[name],
-        historicalAverage: historicalAverages[name],
+        attribute,
+        rcp45_mean: rcp45[name],
+        rcp85_mean: rcp85[name],
+        historical_average: historicalAverages[name],
       };
     });
 
-    console.log([...dbResults, ...acisResults]);
     return res.status(200).json({
       geo,
       results: [...dbResults, ...acisResults],
