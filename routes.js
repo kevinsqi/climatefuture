@@ -130,6 +130,12 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
   }
 
   return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
+    // Value will be set to -999 if there's no data for the given date.
+    // Skip the value in that case.
+    if (elemValues[idx] === -999) {
+      console.warn(`Value of ${name} is ${elemValues[idx]} for ${year}`);
+      return obj;
+    }
     obj[name] = elemValues[idx];
     return obj;
   }, {});
@@ -192,13 +198,16 @@ router.get('/locations', async (req, res, next) => {
 
     const acisResults = ACIS_ELEM_NAMES.map((name) => {
       const attribute = ACIS_ELEM_NAME_TO_ATTRIBUTE[name];
+      if (rcp45[name] == null || rcp85[name] == null || historicalAverages[name] == null) {
+        return null;
+      }
       return {
         attribute,
         rcp45_mean: rcp45[name],
         rcp85_mean: rcp85[name],
         historical_average: historicalAverages[name],
       };
-    });
+    }).filter((result) => result); // Remove nulls
 
     return res.status(200).json({
       geo,
