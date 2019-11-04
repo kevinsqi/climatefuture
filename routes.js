@@ -70,7 +70,7 @@ async function getCounty({ lat, lng }) {
   return response.data.County.FIPS;
 }
 
-async function getProjections({ lat, lng, year, maxDistance }) {
+async function getProjectionsFromDB({ lat, lng, year, maxDistance }) {
   const results = await Promise.all([
     knex.raw(
       `
@@ -106,6 +106,7 @@ async function getProjections({ lat, lng, year, maxDistance }) {
 
 async function getAcisProjections({ lat, lng, year, projectionType }) {
   const params = {
+    // TODO: parameterize wmean, add allMin/allMax
     grid: `loca:wmean:${projectionType}`,
     loc: `${lng},${lat}`,
     date: `${year}`,
@@ -162,14 +163,13 @@ router.get('/locations', async (req, res, next) => {
     const geo = await geocodeLocation(req.query.address);
     const { lat, lng } = geo.geometry.location;
 
-    const results = await getProjections({
-      lat,
-      lng,
-      year: req.query.year,
-      maxDistance: 50000,
-    });
-
-    const [rcp45, rcp85, historicalAverages] = await Promise.all([
+    const [dbResults, rcp45, rcp85, historicalAverages] = await Promise.all([
+      getProjectionsFromDB({
+        lat,
+        lng,
+        year: req.query.year,
+        maxDistance: 50000,
+      }),
       getAcisProjections({ lat, lng, year: req.query.year, projectionType: 'rcp45' }),
       getAcisProjections({ lat, lng, year: req.query.year, projectionType: 'rcp85' }),
       getAcisHistoricalAverages({
@@ -188,11 +188,11 @@ router.get('/locations', async (req, res, next) => {
         historicalAverage: historicalAverages[name],
       };
     });
-    console.log(acisResults);
 
+    console.log([...dbResults, ...acisResults]);
     return res.status(200).json({
       geo,
-      results,
+      results: [...dbResults, ...acisResults],
     });
   } catch (error) {
     console.error(error);
