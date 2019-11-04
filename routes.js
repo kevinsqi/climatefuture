@@ -1,8 +1,57 @@
 const express = require('express');
 const axios = require('axios');
 const knex = require('./db/knex');
+const _ = require('lodash');
 
 const router = express.Router();
+
+const ACIS_API_ENDPOINT = 'https://grid2.rcc-acis.org/GridData';
+
+const ACIS_ELEMS = [
+  {
+    name: 'maxt',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'cnt_gt_100',
+  },
+  {
+    name: 'maxt',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'mean',
+  },
+  {
+    name: 'mint',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'cnt_lt_32',
+  },
+  {
+    name: 'pcpn',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'cnt_lt_0.01',
+  },
+  {
+    name: 'pcpn',
+    interval: 'yly',
+    duration: 'yly',
+    reduce: 'sum',
+    units: 'inch',
+  },
+];
+
+const ACIS_ELEM_NAMES = ACIS_ELEMS.map((elem) => `${elem.name}:${elem.reduce}`);
+const ACIS_ELEM_NAME_TO_ATTRIBUTE = {
+  'maxt:cnt_gt_100': 'temp_num_days_above_100f',
+  'maxt:mean': 'temp_avg',
+  'mint:cnt_lt_32': 'temp_num_days_below_32f',
+  'pcpn:cnt_lt_0.01': 'precipitation_num_dry_days',
+  'pcpn:sum': 'precipitation_total',
+};
+if (!ACIS_ELEM_NAMES.every((name) => ACIS_ELEM_NAME_TO_ATTRIBUTE[name])) {
+  throw new Error(`Missing name mapping for ${name}`);
+}
 
 async function geocodeLocation(address) {
   const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
@@ -19,7 +68,19 @@ async function geocodeLocation(address) {
   return response.data.results[0];
 }
 
-async function getProjections({ lat, lng, year, maxDistance }) {
+async function getCounty({ lat, lng }) {
+  const response = await axios.get('https://geo.fcc.gov/api/census/block/find', {
+    params: {
+      latitude: lat,
+      longitude: lng,
+      format: 'json',
+    },
+  });
+
+  return response.data.County.FIPS;
+}
+
+async function getProjectionsFromDB({ lat, lng, year, maxDistance }) {
   const results = await Promise.all([
     knex.raw(
       `
@@ -29,60 +90,6 @@ async function getProjections({ lat, lng, year, maxDistance }) {
         LIMIT 1
       `,
       { year, point: `SRID=4326;POINT(${lng} ${lat})` },
-    ),
-    knex.raw(
-      `
-        SELECT *, (
-          SELECT num_days_above_100f FROM noaa_observations
-          WHERE ST_Distance(
-            ST_Transform(:point::geometry, 3857),
-            ST_Transform(noaa_observations.geography::geometry, 3857)
-          ) < :maxDistance
-          ORDER BY geography <-> :point
-          LIMIT 1
-        ) as historical_average
-        FROM noaa_projections
-        WHERE ST_Distance(
-          ST_Transform(:point::geometry, 3857),
-          ST_Transform(noaa_projections.geography::geometry, 3857)
-        ) < :maxDistance
-        AND attribute = 'num_days_above_100f'
-        AND year = :year
-        ORDER BY geography <-> :point
-        LIMIT 1
-      `,
-      {
-        year,
-        point: `SRID=4326;POINT(${lng} ${lat})`,
-        maxDistance,
-      },
-    ),
-    knex.raw(
-      `
-        SELECT *, (
-          SELECT num_dry_days FROM noaa_observations
-          WHERE ST_Distance(
-            ST_Transform(:point::geometry, 3857),
-            ST_Transform(noaa_observations.geography::geometry, 3857)
-          ) < :maxDistance
-          ORDER BY geography <-> :point
-          LIMIT 1
-        ) as historical_average
-        FROM noaa_projections
-        WHERE ST_Distance(
-          ST_Transform(:point::geometry, 3857),
-          ST_Transform(noaa_projections.geography::geometry, 3857)
-        ) < :maxDistance
-        AND attribute = 'num_dry_days'
-        AND year = :year
-        ORDER BY geography <-> :point
-        LIMIT 1
-      `,
-      {
-        year,
-        point: `SRID=4326;POINT(${lng} ${lat})`,
-        maxDistance,
-      },
     ),
     knex.raw(
       `
@@ -107,6 +114,51 @@ async function getProjections({ lat, lng, year, maxDistance }) {
   return results.map((result) => result.rows[0]).filter((result) => result);
 }
 
+async function getAcisProjections({ lat, lng, year, projectionType }) {
+  const params = {
+    // TODO: parameterize wmean, add allMin/allMax
+    grid: `loca:wmean:${projectionType}`,
+    loc: `${lng},${lat}`,
+    date: `${year}`,
+    elems: ACIS_ELEMS,
+  };
+  const response = await axios.post(ACIS_API_ENDPOINT, params);
+  const [yearValue, ...elemValues] = response.data.data[0];
+
+  if (Number(year) !== Number(yearValue) || elemValues.length !== ACIS_ELEM_NAMES.length) {
+    throw new Error('Unexpected year or elems');
+  }
+
+  return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
+    obj[name] = elemValues[idx];
+    return obj;
+  }, {});
+}
+
+async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
+  const params = {
+    grid: 'livneh',
+    loc: `${lng},${lat}`,
+    sdate: dateStart,
+    edate: dateEnd,
+    elems: ACIS_ELEMS,
+  };
+  const response = await axios.post(ACIS_API_ENDPOINT, params);
+  const dataByYear = response.data.data;
+  return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
+    obj[name] = _.mean(
+      dataByYear.map((row) => {
+        const value = row[idx + 1]; // Add 1 because first element of each row is the year
+        if (value < 0) {
+          throw new Error(`No data for ${name} for year ${row[0]}`);
+        }
+        return value;
+      }),
+    );
+    return obj;
+  }, {});
+}
+
 router.get('/locations', async (req, res, next) => {
   try {
     // Validate params
@@ -117,20 +169,43 @@ router.get('/locations', async (req, res, next) => {
       return res.status(400).json({ error: 'MISSING_YEAR' });
     }
 
+    // Location
     const geo = await geocodeLocation(req.query.address);
     const { lat, lng } = geo.geometry.location;
-    const results = await getProjections({
-      lat,
-      lng,
-      year: req.query.year,
-      maxDistance: 50000,
+
+    const [dbResults, rcp45, rcp85, historicalAverages] = await Promise.all([
+      getProjectionsFromDB({
+        lat,
+        lng,
+        year: req.query.year,
+        maxDistance: 50000,
+      }),
+      getAcisProjections({ lat, lng, year: req.query.year, projectionType: 'rcp45' }),
+      getAcisProjections({ lat, lng, year: req.query.year, projectionType: 'rcp85' }),
+      getAcisHistoricalAverages({
+        lat,
+        lng,
+        dateStart: `1950-01-01`,
+        dateEnd: `2013-01-01`, // Observation data stops at 2013
+      }),
+    ]);
+
+    const acisResults = ACIS_ELEM_NAMES.map((name) => {
+      const attribute = ACIS_ELEM_NAME_TO_ATTRIBUTE[name];
+      return {
+        attribute,
+        rcp45_mean: rcp45[name],
+        rcp85_mean: rcp85[name],
+        historical_average: historicalAverages[name],
+      };
     });
 
     return res.status(200).json({
       geo,
-      results,
+      results: [...dbResults, ...acisResults],
     });
   } catch (error) {
+    console.error(error);
     return next(error);
   }
 });
