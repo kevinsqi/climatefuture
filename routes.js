@@ -171,9 +171,10 @@ async function getAcisProjections({ lat, lng, year }) {
     throw new Error('Unexpected year or elems');
   }
 
-  return elemNames.map((name, idx) => {
-    return { name, value: elemValues[idx] };
-  });
+  return elemNames.reduce((obj, name, idx) => {
+    obj[name] = elemValues[idx];
+    return obj;
+  }, {});
 }
 
 async function getAcisObservations({ lat, lng, dateStart, dateEnd }) {
@@ -185,15 +186,17 @@ async function getAcisObservations({ lat, lng, dateStart, dateEnd }) {
     elems: ACIS_ELEMS,
   };
   const response = await axios.post(ACIS_API_ENDPOINT, params);
-  const elemNames = params.elems.map((elem) => `${elem.name},${elem.reduce}`);
+  const elemNames = params.elems.map((elem) => `${elem.name}:${elem.reduce}`);
 
   const dataByYear = response.data.data;
-  return elemNames.map((name, idx) => {
-    return {
-      name,
-      value: _.mean(dataByYear.map((row) => row[idx + 1])),
-    };
-  });
+  return elemNames.reduce((obj, name, idx) => {
+    obj[name] = _.mean(
+      dataByYear.map((row) => {
+        return row[idx + 1]; // Add 1 because first element of each row is the year
+      }),
+    );
+    return obj;
+  }, {});
 }
 
 router.get('/locations', async (req, res, next) => {
@@ -218,13 +221,15 @@ router.get('/locations', async (req, res, next) => {
     });
 
     // TODO: promise.all with other stuff
-    const acisResults = await getAcisProjections({ lat, lng, year: req.query.year });
-    const acisObsResults = await getAcisObservations({
-      lat,
-      lng,
-      dateStart: `1950-01-01`,
-      dateEnd: `2013-01-01`, // Observation data stops at 2013
-    });
+    const [acisResults, acisObsResults] = await Promise.all([
+      getAcisProjections({ lat, lng, year: req.query.year }),
+      getAcisObservations({
+        lat,
+        lng,
+        dateStart: `1950-01-01`,
+        dateEnd: `2013-01-01`, // Observation data stops at 2013
+      }),
+    ]);
     console.log('acisResults', acisResults);
     console.dir(acisObsResults, { depth: null });
 
