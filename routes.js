@@ -129,8 +129,9 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
     date: `${year}`,
     elems: ACIS_ELEMS,
   };
+  let response;
   try {
-    const response = await axios.post(ACIS_API_ENDPOINT, params);
+    response = await axios.post(ACIS_API_ENDPOINT, params);
   } catch (errorResponse) {
     if (errorResponse.response && errorResponse.response.data) {
       const { status, error } = errorResponse.response.data;
@@ -167,8 +168,9 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
     edate: dateEnd,
     elems: ACIS_ELEMS,
   };
+  let response;
   try {
-    const response = await axios.post(ACIS_API_ENDPOINT, params);
+    response = await axios.post(ACIS_API_ENDPOINT, params);
   } catch (errorResponse) {
     if (errorResponse.response && errorResponse.response.data) {
       const { status, error } = errorResponse.response.data;
