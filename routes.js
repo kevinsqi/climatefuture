@@ -192,7 +192,11 @@ async function getAcisObservations({ lat, lng, dateStart, dateEnd }) {
   return elemNames.reduce((obj, name, idx) => {
     obj[name] = _.mean(
       dataByYear.map((row) => {
-        return row[idx + 1]; // Add 1 because first element of each row is the year
+        const value = row[idx + 1]; // Add 1 because first element of each row is the year
+        if (value < 0) {
+          throw new Error(`No data for ${name} for year ${row[0]}`);
+        }
+        return value;
       }),
     );
     return obj;
