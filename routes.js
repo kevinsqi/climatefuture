@@ -121,28 +121,60 @@ async function getProjectionsFromDB({ lat, lng, year, maxDistance }) {
   return results.map((result) => result.rows[0]).filter((result) => result);
 }
 
+async function getCachedAcisResponse(cacheParams) {
+  const results = await knex('acis_responses').where(cacheParams);
+  return results.length > 0 && results[0].response;
+}
+
 async function getAcisProjections({ lat, lng, year, projectionType }) {
   const params = {
     // TODO: parameterize wmean, add allMin/allMax
     grid: `loca:wmean:${projectionType}`,
     loc: `${lng},${lat}`,
-    date: `${year}`,
+    sdate: `${year}-01-01`,
+    edate: `${year}-12-31`,
     elems: ACIS_ELEMS,
   };
-  let response;
-  try {
-    response = await axios.post(ACIS_API_ENDPOINT, params);
-  } catch (errorResponse) {
-    if (errorResponse.response && errorResponse.response.data) {
-      const { status, error } = errorResponse.response.data;
-      if (status === 'Invalid request.' && error === 'bad ur') {
-        // No data available for location, handle gracefully.
-        return {};
-      }
-    }
-    throw errorResponse;
+
+  // Try fetching from cache
+  const cacheParams = {
+    grid: params.grid,
+    lat,
+    lng,
+    date_start: params.sdate,
+    date_end: params.edate,
+    api_url: ACIS_API_ENDPOINT,
+  };
+  let responseData = await getCachedAcisResponse(cacheParams);
+
+  // TODO: remove noreintegrate
+  if (responseData) {
+    console.log('cache hit!');
   }
-  const [yearValue, ...elemValues] = response.data.data[0];
+
+  if (!responseData) {
+    // Fetch from API
+    try {
+      const response = await axios.post(ACIS_API_ENDPOINT, params);
+      responseData = response.data;
+    } catch (errorResponse) {
+      if (errorResponse.response && errorResponse.response.data) {
+        const { status, error } = errorResponse.response.data;
+        if (status === 'Invalid request.' && error === 'bad ur') {
+          // No data available for location, handle gracefully.
+          return {};
+        }
+      }
+      throw errorResponse;
+    }
+    // Cache response data
+    await knex('acis_responses').insert({
+      response: responseData,
+      ...cacheParams,
+    });
+  }
+
+  const [yearValue, ...elemValues] = responseData.data[0];
 
   if (Number(year) !== Number(yearValue) || elemValues.length !== ACIS_ELEM_NAMES.length) {
     throw new Error('Unexpected year or elems');
@@ -168,23 +200,49 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
     edate: dateEnd,
     elems: ACIS_ELEMS,
   };
-  let response;
-  try {
-    response = await axios.post(ACIS_API_ENDPOINT, params);
-  } catch (errorResponse) {
-    if (errorResponse.response && errorResponse.response.data) {
-      const { status, error } = errorResponse.response.data;
-      if (status === 'Invalid request.' && error === 'bad ur') {
-        // No data available for location, handle gracefully.
-        return {};
-      }
-    }
-    throw errorResponse;
+  const cacheParams = {
+    grid: params.grid,
+    lat,
+    lng,
+    date_start: params.sdate,
+    date_end: params.edate,
+    api_url: ACIS_API_ENDPOINT,
+  };
+  let responseData = await getCachedAcisResponse(cacheParams);
+
+  // TODO remove noreintegrate
+  if (responseData) {
+    console.log('cache hit!');
   }
-  const dataByYear = response.data.data;
+
+  if (!responseData) {
+    // Fetch from API
+    try {
+      const response = await axios.post(ACIS_API_ENDPOINT, params);
+      responseData = response.data;
+    } catch (errorResponse) {
+      if (errorResponse.response && errorResponse.response.data) {
+        const { status, error } = errorResponse.response.data;
+        if (status === 'Invalid request.' && error === 'bad ur') {
+          // No data available for location, handle gracefully.
+          return {};
+        }
+      }
+      throw errorResponse;
+    }
+
+    // Cache response data
+    await knex('acis_responses').insert({
+      response: responseData,
+      ...cacheParams,
+    });
+  }
+
+  const resultsByYear = responseData.data;
+
   return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
     obj[name] = _.mean(
-      dataByYear.map((row) => {
+      resultsByYear.map((row) => {
         const value = row[idx + 1]; // Add 1 because first element of each row is the year
         if (value < 0) {
           throw new Error(`No data for ${name} for year ${row[0]}`);
