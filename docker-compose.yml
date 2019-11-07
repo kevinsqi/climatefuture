@@ -24,5 +24,5 @@ services:
       POSTGRES_USER: climatefuture_user
     volumes:
       # Load schema and seed data when postgres is initialized
-      - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgres-data:/var/lib/postgresql/data

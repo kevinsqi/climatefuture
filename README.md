@@ -23,12 +23,22 @@ docker-compose build
 docker-compose up
 ```
 
-## Database actions
+## Actions
 
-New migration:
+
+Shell into database:
+
+```
+yarn db:shell
+```
+
+Creating a new migration and updating the DB snapshot:
 
 ```
 node_modules/.bin/knex --knexfile ./db/knexfile.js migrate:make [MIGRATION_NAME]
+# ...make changes to the migration file...
+docker exec -it climatefuture_server_1 yarn run db:migrate
+docker exec climatefuture_postgres_1 pg_dump -U climatefuture_user climatefuture > db/init.sql
 ```
 
 ## Deploying to production
