@@ -23,6 +23,14 @@ docker-compose build
 docker-compose up
 ```
 
+## Database actions
+
+New migration:
+
+```
+node_modules/.bin/knex --knexfile ./db/knexfile.js migrate:make [MIGRATION_NAME]
+```
+
 ## Deploying to production
 
 SSH setup:
