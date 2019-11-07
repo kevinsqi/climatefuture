@@ -147,11 +147,6 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
   };
   let responseData = await getCachedAcisResponse(cacheParams);
 
-  // TODO: remove noreintegrate
-  if (responseData) {
-    console.log('cache hit!');
-  }
-
   if (!responseData) {
     // Fetch from API
     try {
@@ -209,11 +204,6 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
     api_url: ACIS_API_ENDPOINT,
   };
   let responseData = await getCachedAcisResponse(cacheParams);
-
-  // TODO remove noreintegrate
-  if (responseData) {
-    console.log('cache hit!');
-  }
 
   if (!responseData) {
     // Fetch from API

@@ -23,8 +23,7 @@ docker-compose build
 docker-compose up
 ```
 
-## Actions
-
+## Common dev tasks
 
 Shell into database:
 
@@ -32,7 +31,7 @@ Shell into database:
 yarn db:shell
 ```
 
-Creating a new migration and updating the DB snapshot:
+Create a new migration and update the DB snapshot:
 
 ```
 node_modules/.bin/knex --knexfile ./db/knexfile.js migrate:make [MIGRATION_NAME]
@@ -40,6 +39,21 @@ node_modules/.bin/knex --knexfile ./db/knexfile.js migrate:make [MIGRATION_NAME]
 docker exec -it climatefuture_server_1 yarn run db:migrate
 docker exec climatefuture_postgres_1 pg_dump -U climatefuture_user climatefuture > db/init.sql
 ```
+
+## Common prod tasks
+
+Shell into database:
+
+```
+dokku postgres:connect climatefuture
+```
+
+Running migrations in production:
+
+```
+docker exec -e NODE_ENV=production climatefuture.web.1 yarn run db:migrate
+```
+
 
 ## Deploying to production
 
