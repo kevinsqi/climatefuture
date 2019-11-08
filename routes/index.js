@@ -244,6 +244,32 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
   }, {});
 }
 
+async function getAcisResults({ lat, lng, year }) {
+  const [rcp45, rcp85, historicalAverages] = await Promise.all([
+    getAcisProjections({ lat, lng, year, projectionType: 'rcp45' }),
+    getAcisProjections({ lat, lng, year, projectionType: 'rcp85' }),
+    getAcisHistoricalAverages({
+      lat,
+      lng,
+      dateStart: `1950-01-01`,
+      dateEnd: `2013-01-01`, // Observation data stops at 2013
+    }),
+  ]);
+
+  return ACIS_ELEM_NAMES.map((name) => {
+    const attribute = ACIS_ELEM_NAME_TO_ATTRIBUTE[name];
+    if (rcp45[name] == null || rcp85[name] == null || historicalAverages[name] == null) {
+      return null;
+    }
+    return {
+      attribute,
+      rcp45_mean: rcp45[name],
+      rcp85_mean: rcp85[name],
+      historical_average: historicalAverages[name],
+    };
+  }).filter((result) => result); // Remove nulls
+}
+
 router.get('/locations', async (req, res, next) => {
   try {
     // Validate params
@@ -258,35 +284,19 @@ router.get('/locations', async (req, res, next) => {
     const geo = await geocodeLocation(req.query.address);
     const { lat, lng } = geo.geometry.location;
 
-    const [dbResults, rcp45, rcp85, historicalAverages] = await Promise.all([
+    const [dbResults, acisResults] = await Promise.all([
       getProjectionsFromDB({
         lat,
         lng,
         year: req.query.year,
         maxDistance: 50000,
       }),
-      getAcisProjections({ lat, lng, year: req.query.year, projectionType: 'rcp45' }),
-      getAcisProjections({ lat, lng, year: req.query.year, projectionType: 'rcp85' }),
-      getAcisHistoricalAverages({
+      getAcisResults({
         lat,
         lng,
-        dateStart: `1950-01-01`,
-        dateEnd: `2013-01-01`, // Observation data stops at 2013
+        year: req.query.year,
       }),
     ]);
-
-    const acisResults = ACIS_ELEM_NAMES.map((name) => {
-      const attribute = ACIS_ELEM_NAME_TO_ATTRIBUTE[name];
-      if (rcp45[name] == null || rcp85[name] == null || historicalAverages[name] == null) {
-        return null;
-      }
-      return {
-        attribute,
-        rcp45_mean: rcp45[name],
-        rcp85_mean: rcp85[name],
-        historical_average: historicalAverages[name],
-      };
-    }).filter((result) => result); // Remove nulls
 
     return res.status(200).json({
       geo,
