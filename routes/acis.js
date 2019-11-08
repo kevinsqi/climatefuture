@@ -5,6 +5,8 @@ const knex = require('../db/knex');
 
 const ACIS_API_ENDPOINT = 'https://grid2.rcc-acis.org/GridData';
 
+// If you update this, acis_responses cache table should be invalidated.
+// See https://github.com/nemac/climate-explorer/blob/master/resources/vendor/climate-widget-graph/src/main.js
 const ACIS_ELEMS = [
   {
     name: 'maxt',
@@ -58,51 +60,53 @@ if (!ACIS_ELEM_NAMES.every((name) => ACIS_ELEM_NAME_TO_ATTRIBUTE[name])) {
   throw new Error(`Missing name mapping in ACIS_ELEM_NAME_TO_ATTRIBUTE`);
 }
 
-async function getCachedAcisResponse(cacheParams) {
-  const results = await knex('acis_responses').where(cacheParams);
+async function getCachedAcisResponse(params) {
+  const results = await knex('acis_responses').where(params);
   return results.length > 0 && results[0].response;
 }
 
-async function getAcisProjections({ lat, lng, year, projectionType }) {
-  const params = {
-    // TODO: parameterize wmean, add allMin/allMax
-    grid: `loca:wmean:${projectionType}`,
-    loc: `${lng},${lat}`,
-    sdate: `${year}-01-01`,
-    edate: `${year}-12-31`,
-    elems: ACIS_ELEMS,
-  };
+async function fetchAcisData({ grid, lat, lng, date_start, date_end, api_url }) {
+  try {
+    const response = await axios.post(api_url, {
+      // TODO: parameterize wmean, add allMin/allMax
+      grid,
+      loc: `${lng},${lat}`,
+      sdate: date_start,
+      edate: date_end,
+      elems: ACIS_ELEMS,
+    });
+  } catch (errorResponse) {
+    if (errorResponse.response && errorResponse.response.data) {
+      const { status, error } = errorResponse.response.data;
+      if (status === 'Invalid request.' && error === 'bad ur') {
+        // No data available for location, handle gracefully.
+        return {};
+      }
+    }
+    throw errorResponse;
+  }
+  return response.data;
+}
 
+async function getAcisProjections({ lat, lng, year, projectionType }) {
   // Try fetching from cache
-  const cacheParams = {
-    grid: params.grid,
+  const params = {
+    grid: `loca:wmean:${projectionType}`,
     lat,
     lng,
-    date_start: params.sdate,
-    date_end: params.edate,
+    date_start: `${year}-01-01`,
+    date_end: `${year}-12-31`,
     api_url: ACIS_API_ENDPOINT,
   };
-  let responseData = await getCachedAcisResponse(cacheParams);
+  let responseData = await getCachedAcisResponse(params);
 
   if (!responseData) {
-    // Fetch from API
-    try {
-      const response = await axios.post(ACIS_API_ENDPOINT, params);
-      responseData = response.data;
-    } catch (errorResponse) {
-      if (errorResponse.response && errorResponse.response.data) {
-        const { status, error } = errorResponse.response.data;
-        if (status === 'Invalid request.' && error === 'bad ur') {
-          // No data available for location, handle gracefully.
-          return {};
-        }
-      }
-      throw errorResponse;
-    }
+    responseData = await fetchAcisData(params);
+
     // Cache response data
     await knex('acis_responses').insert({
       response: responseData,
-      ...cacheParams,
+      ...params,
     });
   }
 
@@ -127,36 +131,16 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
 async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
   const params = {
     grid: 'livneh',
-    loc: `${lng},${lat}`,
-    sdate: dateStart,
-    edate: dateEnd,
-    elems: ACIS_ELEMS,
-  };
-  const cacheParams = {
-    grid: params.grid,
     lat,
     lng,
-    date_start: params.sdate,
-    date_end: params.edate,
+    date_start: dateStart,
+    date_end: dateEnd,
     api_url: ACIS_API_ENDPOINT,
   };
-  let responseData = await getCachedAcisResponse(cacheParams);
+  let responseData = await getCachedAcisResponse(params);
 
   if (!responseData) {
-    // Fetch from API
-    try {
-      const response = await axios.post(ACIS_API_ENDPOINT, params);
-      responseData = response.data;
-    } catch (errorResponse) {
-      if (errorResponse.response && errorResponse.response.data) {
-        const { status, error } = errorResponse.response.data;
-        if (status === 'Invalid request.' && error === 'bad ur') {
-          // No data available for location, handle gracefully.
-          return {};
-        }
-      }
-      throw errorResponse;
-    }
+    responseData = await fetchAcisData(params);
 
     // Cache response data
     await knex('acis_responses').insert({
@@ -168,6 +152,7 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
   const resultsByYear = responseData.data;
 
   return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
+    // Average the data across all years
     obj[name] = _.mean(
       resultsByYear.map((row) => {
         const value = row[idx + 1]; // Add 1 because first element of each row is the year
