@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
-const knex = require('./db/knex');
 const _ = require('lodash');
+const knex = require('../db/knex');
 
 const router = express.Router();
 
