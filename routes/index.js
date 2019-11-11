@@ -37,15 +37,6 @@ async function getProjectionsFromDB({ lat, lng, year, maxDistance }) {
   const results = await Promise.all([
     knex.raw(
       `
-        SELECT * FROM temperatures_cmip5
-        WHERE year_start <= :year
-        ORDER BY geography <-> :point
-        LIMIT 1
-      `,
-      { year, point: `SRID=4326;POINT(${lng} ${lat})` },
-    ),
-    knex.raw(
-      `
         SELECT * FROM climate_central_sea_levels
         WHERE ST_Distance(
           ST_Transform(:point::geometry, 3857),
