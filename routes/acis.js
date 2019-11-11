@@ -60,11 +60,6 @@ if (!ACIS_ELEM_NAMES.every((name) => ACIS_ELEM_NAME_TO_ATTRIBUTE[name])) {
   throw new Error(`Missing name mapping in ACIS_ELEM_NAME_TO_ATTRIBUTE`);
 }
 
-async function getCachedAcisResponse(params) {
-  const results = await knex('acis_responses').where(params);
-  return results.length > 0 && results[0].response;
-}
-
 async function fetchAcisData({ grid, lat, lng, date_start, date_end, api_url }) {
   try {
     const response = await axios.post(api_url, {
@@ -75,32 +70,33 @@ async function fetchAcisData({ grid, lat, lng, date_start, date_end, api_url }) 
       edate: date_end,
       elems: ACIS_ELEMS,
     });
+    return response.data;
   } catch (errorResponse) {
     if (errorResponse.response && errorResponse.response.data) {
       const { status, error } = errorResponse.response.data;
       if (status === 'Invalid request.' && error === 'bad ur') {
         // No data available for location, handle gracefully.
-        return {};
+        return errorResponse.response.data;
       }
     }
     throw errorResponse;
   }
-  return response.data;
 }
 
-async function getAcisProjections({ lat, lng, year, projectionType }) {
-  // Try fetching from cache
-  const params = {
-    grid: `loca:wmean:${projectionType}`,
-    lat,
-    lng,
-    date_start: `${year}-01-01`,
-    date_end: `${year}-12-31`,
-    api_url: ACIS_API_ENDPOINT,
-  };
-  let responseData = await getCachedAcisResponse(params);
+async function getCachedAcisResponse(params) {
+  const results = await knex('acis_responses').where(params);
+  return results.length > 0 && results[0];
+}
 
-  if (!responseData) {
+// Get ACIS API response, with cache read/writes.
+async function getAcisResponse(params) {
+  // Try fetching from cache first
+  const result = await getCachedAcisResponse(params);
+  let responseData;
+
+  if (result) {
+    responseData = result.response;
+  } else {
     responseData = await fetchAcisData(params);
 
     // Cache response data
@@ -110,7 +106,29 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
     });
   }
 
-  const [yearValue, ...elemValues] = responseData.data[0];
+  if (responseData.error) {
+    return null;
+  }
+
+  return responseData.data;
+}
+
+async function getAcisProjections({ lat, lng, year, projectionType }) {
+  const params = {
+    grid: `loca:wmean:${projectionType}`,
+    lat,
+    lng,
+    date_start: `${year}-01-01`,
+    date_end: `${year}-12-31`,
+    api_url: ACIS_API_ENDPOINT,
+  };
+
+  const data = await getAcisResponse(params);
+  if (!data) {
+    return {};
+  }
+
+  const [yearValue, ...elemValues] = data[0];
 
   if (Number(year) !== Number(yearValue) || elemValues.length !== ACIS_ELEM_NAMES.length) {
     throw new Error('Unexpected year or elems');
@@ -137,24 +155,16 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
     date_end: dateEnd,
     api_url: ACIS_API_ENDPOINT,
   };
-  let responseData = await getCachedAcisResponse(params);
 
-  if (!responseData) {
-    responseData = await fetchAcisData(params);
-
-    // Cache response data
-    await knex('acis_responses').insert({
-      response: responseData,
-      ...cacheParams,
-    });
+  const data = await getAcisResponse(params);
+  if (!data) {
+    return {};
   }
-
-  const resultsByYear = responseData.data;
 
   return ACIS_ELEM_NAMES.reduce((obj, name, idx) => {
     // Average the data across all years
     obj[name] = _.mean(
-      resultsByYear.map((row) => {
+      data.map((row) => {
         const value = row[idx + 1]; // Add 1 because first element of each row is the year
         if (value < 0) {
           throw new Error(`No data for ${name} for year ${row[0]}`);
