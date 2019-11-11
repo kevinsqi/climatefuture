@@ -70,6 +70,11 @@ router.get('/locations', async (req, res, next) => {
 
     // Location
     const geo = await geocodeLocation(req.query.address);
+    if (!geo) {
+      return res.status(404).json({
+        error: 'LOCATION_NOT_FOUND',
+      });
+    }
     const { lat, lng } = geo.geometry.location;
 
     const [dbResults, acisResults] = await Promise.all([
