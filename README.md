@@ -54,6 +54,13 @@ Running migrations in production:
 docker exec -e NODE_ENV=production climatefuture.web.1 yarn run db:migrate
 ```
 
+Clearing cached `acis_responses` table:
+
+```
+dokku postgres:connect climatefuture
+delete from acis_responses;
+```
+
 
 ## Deploying to production
 
