@@ -62,7 +62,7 @@ if (!ACIS_ELEM_NAMES.every((name) => ACIS_ELEM_NAME_TO_ATTRIBUTE[name])) {
 
 async function getCachedAcisResponse(params) {
   const results = await knex('acis_responses').where(params);
-  return results.length > 0 && results[0].response;
+  return results.length > 0 && results[0];
 }
 
 async function fetchAcisData({ grid, lat, lng, date_start, date_end, api_url }) {
@@ -80,7 +80,7 @@ async function fetchAcisData({ grid, lat, lng, date_start, date_end, api_url }) 
       const { status, error } = errorResponse.response.data;
       if (status === 'Invalid request.' && error === 'bad ur') {
         // No data available for location, handle gracefully.
-        return {};
+        return errorResponse.response.data;
       }
     }
     throw errorResponse;
@@ -98,9 +98,12 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
     date_end: `${year}-12-31`,
     api_url: ACIS_API_ENDPOINT,
   };
-  let responseData = await getCachedAcisResponse(params);
+  const result = await getCachedAcisResponse(params);
+  let responseData;
 
-  if (!responseData) {
+  if (result) {
+    responseData = result.response;
+  } else {
     responseData = await fetchAcisData(params);
 
     // Cache response data
@@ -108,6 +111,10 @@ async function getAcisProjections({ lat, lng, year, projectionType }) {
       response: responseData,
       ...params,
     });
+  }
+
+  if (responseData.error) {
+    return {};
   }
 
   const [yearValue, ...elemValues] = responseData.data[0];
@@ -137,16 +144,23 @@ async function getAcisHistoricalAverages({ lat, lng, dateStart, dateEnd }) {
     date_end: dateEnd,
     api_url: ACIS_API_ENDPOINT,
   };
-  let responseData = await getCachedAcisResponse(params);
+  const result = await getCachedAcisResponse(params);
+  let responseData;
 
-  if (!responseData) {
+  if (result) {
+    responseData = result.response;
+  } else {
     responseData = await fetchAcisData(params);
 
     // Cache response data
     await knex('acis_responses').insert({
       response: responseData,
-      ...cacheParams,
+      ...params,
     });
+  }
+
+  if (responseData.error) {
+    return {};
   }
 
   const resultsByYear = responseData.data;
